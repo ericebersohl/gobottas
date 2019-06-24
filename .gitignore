@@ -13,3 +13,6 @@
 
 # Environment
 .env
+
+# Idea IDE stuff
+.idea
