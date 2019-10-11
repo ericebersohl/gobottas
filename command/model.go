@@ -29,7 +29,7 @@ const (
 )
 
 func (ct CommandType) String() string {
-	return [...]string{"None", "Error", "Help", "Meme"}[ct]
+	return [...]string{"None", "Error", "Unrecognized", "Help", "Meme"}[ct]
 }
 
 func StrToCommandType(s string) CommandType {
@@ -40,6 +40,8 @@ func StrToCommandType(s string) CommandType {
 		return Help
 	case "meme":
 		return Meme
+	case "error":
+		return Error
 	default:
 		return Unrecognized
 	}

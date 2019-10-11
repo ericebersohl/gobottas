@@ -28,7 +28,50 @@ func TestToSnowflake(t *testing.T) {
 			}
 		})
 	}
-	// nil
-	// not a snowflake
-	// snowflake
+}
+
+func TestStrToCommandType(t *testing.T) {
+	tests := []struct{
+		name string
+		in string
+		want CommandType
+	}{
+		{name: "none", in: "none", want: None},
+		{name: "help", in: "help", want: Help},
+		{name: "meme", in: "meme", want: Meme},
+		{name: "err", in: "error", want: Error},
+		{name: "unrec", in: "blargh", want: Unrecognized},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			ct := StrToCommandType(test.in)
+			if ct != test.want {
+				t.Errorf("unexpected CommandType (in = %s, out = %s)", test.in, ct.String())
+			}
+		})
+	}
+}
+
+func TestCommandType_String(t *testing.T) {
+	tests := []struct{
+		name string
+		in CommandType
+		want string
+	}{
+		{name: "none", in: None, want: "None"},
+		{name: "help", in: Help, want: "Help"},
+		{name: "unrec", in: Unrecognized, want: "Unrecognized"},
+		{name: "meme", in: Meme, want: "Meme"},
+		{name: "error", in: Error, want: "Error"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			s := test.in.String()
+			if s != test.want {
+				t.Errorf("wrong string (in = %s, out = %s)", test.in.String(), s)
+			}
+		})
+	}
 }
