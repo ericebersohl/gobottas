@@ -2,13 +2,16 @@ package command
 
 import (
 	"math/rand"
+	"strings"
 	"time"
 )
 
-type Interceptor func(*Message) *Message
+type Interceptor func(*Message) error
 
 // Adds relevant data to the HelpData struct.  The Executor might look for this data if it runs into an error
-func HelpInterceptor(m *Message) *Message {
+// If the first arg has a defined submessage, add it.
+// Todo(ee): load help messages from file on startup?
+func HelpInterceptor(m *Message) error {
 	data := HelpData{}
 
 	switch m.CommandType {
@@ -22,17 +25,27 @@ func HelpInterceptor(m *Message) *Message {
 		data.HelpMsg = "Gobottas ran into an unhandled error."
 	default:
 		// return the message with a nil HelpData pointer
-		return m
+		return nil
+	}
+
+	// check if there are any args
+	if len(m.Args) > 0 {
+		switch strings.ToLower(m.Args[0]) {
+		case "meme":
+			data.SubMsg = "todo: add better help for the meme"
+		default:
+			// do nothing
+		}
 	}
 
 	// add the struct to the message
 	m.HelpData = &data
 
-	return m
+	return nil
 }
 
 // Adds a meme to the Message to be returned by the executor
-func MemeInterceptor(m *Message) *Message {
+func MemeInterceptor(m *Message) error {
 	// if the type isn't meme, don't add a meme
 	if m.CommandType == Meme {
 		memeSlice := []string{
@@ -49,5 +62,5 @@ func MemeInterceptor(m *Message) *Message {
 		}
 	}
 
-	return m
+	return nil
 }

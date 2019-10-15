@@ -26,13 +26,16 @@ func TestHelpInterceptor(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			m := HelpInterceptor(test.in)
-			if (m.HelpData == nil) != test.wantNil {
+			err := HelpInterceptor(test.in)
+			if err != nil {
+				t.Errorf("help interceptor error: %v", err)
+			}
+			if (test.in.HelpData == nil) != test.wantNil {
 				t.Errorf("helpData not initialized properly.")
 			}
 
-			if m.CommandType != test.out {
-				t.Errorf("HelpData has wrong command type (want = %s, got = %s)", test.out.String(), m.CommandType.String())
+			if test.in.CommandType != test.out {
+				t.Errorf("HelpData has wrong command type (want = %s, got = %s)", test.out.String(), test.in.CommandType.String())
 			}
 		})
 	}
@@ -61,13 +64,17 @@ func TestMemeInterceptor(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			m := MemeInterceptor(test.in)
-			if (m.MemeData == nil) != test.wantNil {
+			err := MemeInterceptor(test.in)
+			if err != nil {
+				t.Errorf("meme interceptor error: %v", err)
+			}
+
+			if (test.in.MemeData == nil) != test.wantNil {
 				t.Errorf("meme struct incorrectly initialized")
 			}
 
-			if m.CommandType != test.out {
-				t.Errorf("in and out CommandTypes don't match (want = %s, got = %s)", test.out.String(), m.CommandType.String())
+			if test.in.CommandType != test.out {
+				t.Errorf("in and out CommandTypes don't match (want = %s, got = %s)", test.out.String(), test.in.CommandType.String())
 			}
 		})
 	}
