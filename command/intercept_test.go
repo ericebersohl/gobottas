@@ -4,18 +4,18 @@ import "testing"
 
 func TestHelpInterceptor(t *testing.T) {
 
-	noCommand := Message{ CommandType: None }
-	unrecognized := Message{ CommandType: Unrecognized }
-	help := Message{ CommandType: Help }
-	meme := Message{ CommandType: Meme }
-	errorMsg := Message{ CommandType: Error }
+	noCommand := Message{CommandType: None}
+	unrecognized := Message{CommandType: Unrecognized}
+	help := Message{CommandType: Help}
+	meme := Message{CommandType: Meme}
+	errorMsg := Message{CommandType: Error}
 
-	tests := []struct{
-		name string
-		in *Message
-		out CommandType
+	tests := []struct {
+		name      string
+		in        *Message
+		out       CommandType
 		outString string
-		wantNil bool
+		wantNil   bool
 	}{
 		{name: "no-command", in: &noCommand, out: None, wantNil: true},
 		{name: "unrec", in: &unrecognized, out: Unrecognized, wantNil: false},
@@ -43,16 +43,16 @@ func TestHelpInterceptor(t *testing.T) {
 
 func TestMemeInterceptor(t *testing.T) {
 
-	none := Message{ CommandType: None }
-	unrecognized := Message{ CommandType: Unrecognized }
-	help := Message{ CommandType: Help }
-	meme := Message{ CommandType: Meme }
-	errorMsg := Message{ CommandType: Error }
+	none := Message{CommandType: None}
+	unrecognized := Message{CommandType: Unrecognized}
+	help := Message{CommandType: Help}
+	meme := Message{CommandType: Meme}
+	errorMsg := Message{CommandType: Error}
 
-	tests := []struct{
-		name string
-		in *Message
-		out CommandType
+	tests := []struct {
+		name    string
+		in      *Message
+		out     CommandType
 		wantNil bool
 	}{
 		{name: "none", in: &none, out: None, wantNil: true},

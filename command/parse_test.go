@@ -8,15 +8,15 @@ import (
 
 func getDiscordMessage() discordgo.Message {
 	u := discordgo.User{
-		ID:            "3",
-		Bot:           false,
+		ID:  "3",
+		Bot: false,
 	}
 
 	return discordgo.Message{
-		ID:              "1",
-		ChannelID:       "2",
-		Content:         "&help do some things",
-		Author:          &u,
+		ID:        "1",
+		ChannelID: "2",
+		Content:   "&help do some things",
+		Author:    &u,
 	}
 }
 
@@ -85,10 +85,10 @@ func TestParse(t *testing.T) {
 	in := getDiscordMessage()
 	out := getCommandMesage()
 
-	tests := []struct{
-		name string
-		in *discordgo.Message
-		want *Message
+	tests := []struct {
+		name    string
+		in      *discordgo.Message
+		want    *Message
 		wantErr bool
 	}{
 		{name: "nil-user", in: &nilUserIn, want: &errMessage, wantErr: true},

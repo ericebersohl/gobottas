@@ -6,11 +6,11 @@ import (
 )
 
 // Every message that gobottas sees is sent through the parser and the result is a Message
-type Message struct{
+type Message struct {
 	// Data provided by the parser
 	CommandType CommandType // Enumerated type of the command (if there is no command, type = None)
-	Source *Source // Metadata for the message
-	Args []string // Any whitespace-delimited arguments given after the command
+	Source      *Source     // Metadata for the message
+	Args        []string    // Any whitespace-delimited arguments given after the command
 
 	// Specific Command Data (provided by interceptors)
 	HelpData *HelpData
@@ -66,15 +66,15 @@ func ToSnowflake(s string) (Snowflake, error) {
 
 // Defines relevant message data that is persisted after parsing
 type Source struct {
-	AuthorId Snowflake // Unique identifier of the sender
+	AuthorId  Snowflake // Unique identifier of the sender
 	ChannelId Snowflake // Unique identifier of the channel in which the message was sent
-	Content string // Content of the sent message
+	Content   string    // Content of the sent message
 }
 
 // Defines the data that the Help command uses
 type HelpData struct {
 	HelpMsg string // the first line of the help reply; this should always be defined
-	SubMsg string // subsequent lines of the help reply; not necessarily defined
+	SubMsg  string // subsequent lines of the help reply; not necessarily defined
 }
 
 // Defines the data that the Meme command uses

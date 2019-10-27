@@ -11,9 +11,9 @@ func TestHelpExecutor(t *testing.T) {
 
 	nilHD := Message{}
 
-	tests := []struct{
-		name string
-		in *Message
+	tests := []struct {
+		name    string
+		in      *Message
 		wantErr bool
 	}{
 		{name: "nilHD", in: &nilHD, wantErr: true},
@@ -34,9 +34,9 @@ func TestMemeExecutor(t *testing.T) {
 	s := discordgo.Session{}
 	nilMD := Message{}
 
-	tests := []struct{
-		name string
-		in *Message
+	tests := []struct {
+		name    string
+		in      *Message
 		wantErr bool
 	}{
 		{name: "nilMD", in: &nilMD, wantErr: true},

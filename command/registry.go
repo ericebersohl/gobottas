@@ -7,10 +7,10 @@ import (
 
 // Contains Gobottas functions and data
 type Registry struct {
-	Interceptors map[CommandType]Interceptor // all built-in interceptors
-	Executors map[CommandType]Executor // all built-in executors
-	DirPath string // path to local data
-	CommandPrefix uint8 // character that precedes all Gobottas commands
+	Interceptors  map[CommandType]Interceptor // all built-in interceptors
+	Executors     map[CommandType]Executor    // all built-in executors
+	DirPath       string                      // path to local data
+	CommandPrefix uint8                       // character that precedes all Gobottas commands
 }
 
 // Function to call all Interceptors on a message
@@ -57,9 +57,9 @@ type RegistryOpt func(*Registry)
 // Get a new registry, optionally pass RegistryOpts for custom functionality
 func NewRegistry(opts ...RegistryOpt) *Registry {
 	r := Registry{
-		Interceptors: BuiltinInterceptors,
-		Executors: BuiltinExecutors,
-		DirPath: "/tmp",
+		Interceptors:  BuiltinInterceptors,
+		Executors:     BuiltinExecutors,
+		DirPath:       "/tmp",
 		CommandPrefix: '&',
 	}
 

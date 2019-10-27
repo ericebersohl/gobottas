@@ -4,11 +4,11 @@ import "testing"
 
 func TestToSnowflake(t *testing.T) {
 
-	tests := []struct{
-		name string
-		in string
+	tests := []struct {
+		name    string
+		in      string
 		wantErr bool
-		want Snowflake
+		want    Snowflake
 	}{
 		{name: "nil-value", in: "", wantErr: true, want: 0},
 		{name: "not-snowflake", in: "notasnowflake", wantErr: true, want: 0},
@@ -31,9 +31,9 @@ func TestToSnowflake(t *testing.T) {
 }
 
 func TestStrToCommandType(t *testing.T) {
-	tests := []struct{
+	tests := []struct {
 		name string
-		in string
+		in   string
 		want CommandType
 	}{
 		{name: "none", in: "none", want: None},
@@ -54,9 +54,9 @@ func TestStrToCommandType(t *testing.T) {
 }
 
 func TestCommandType_String(t *testing.T) {
-	tests := []struct{
+	tests := []struct {
 		name string
-		in CommandType
+		in   CommandType
 		want string
 	}{
 		{name: "none", in: None, want: "None"},
