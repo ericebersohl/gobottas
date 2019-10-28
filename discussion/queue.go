@@ -6,13 +6,6 @@ import (
 	"time"
 )
 
-type Topic struct {
-	Name        string   // the name of the topic
-	Description string   // longer description of the topic
-	Sources     []string // an optional list of links to source articles
-	Modified    time.Time
-}
-
 // Slice for simplicity, no need to make it a heap-based PQ
 type Queue struct {
 	q        []*Topic // hide the internal list from the user
@@ -28,10 +21,12 @@ func NewQueue() *Queue {
 	return &q
 }
 
+// Get the number of topics in the queue
 func (q *Queue) Len() int {
 	return len(q.q)
 }
 
+// Return the first topic in the queue.  Does not remove the topic from the queue
 func (q *Queue) Next() (*Topic, error) {
 	if len(q.q) > 0 {
 		return q.q[0], nil
