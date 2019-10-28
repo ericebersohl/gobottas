@@ -36,10 +36,9 @@ func TestStrToCommandType(t *testing.T) {
 		in   string
 		want CommandType
 	}{
-		{name: "none", in: "none", want: None},
+		{name: "dq", in: "dq", want: Queue},
 		{name: "help", in: "help", want: Help},
 		{name: "meme", in: "meme", want: Meme},
-		{name: "err", in: "error", want: Error},
 		{name: "unrec", in: "blargh", want: Unrecognized},
 	}
 
@@ -64,6 +63,7 @@ func TestCommandType_String(t *testing.T) {
 		{name: "unrec", in: Unrecognized, want: "Unrecognized"},
 		{name: "meme", in: Meme, want: "Meme"},
 		{name: "error", in: Error, want: "Error"},
+		{name: "queue", in: Queue, want: "Queue"},
 	}
 
 	for _, test := range tests {

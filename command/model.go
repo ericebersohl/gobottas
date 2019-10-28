@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"github.com/ericebersohl/gobottas/discussion"
 	"strconv"
 )
 
@@ -15,6 +16,7 @@ type Message struct {
 	// Specific Command Data (provided by interceptors)
 	HelpData *HelpData
 	MemeData *MemeData
+	QueueData *discussion.QueueData
 }
 
 // Enum for all defined command types
@@ -26,22 +28,21 @@ const (
 	Unrecognized
 	Help
 	Meme
+	Queue
 )
 
 func (ct CommandType) String() string {
-	return [...]string{"None", "Error", "Unrecognized", "Help", "Meme"}[ct]
+	return [...]string{"None", "Error", "Unrecognized", "Help", "Meme", "Queue"}[ct]
 }
 
 func StrToCommandType(s string) CommandType {
 	switch s {
-	case "none":
-		return None
 	case "help":
 		return Help
 	case "meme":
 		return Meme
-	case "error":
-		return Error
+	case "dq":
+		return Queue
 	default:
 		return Unrecognized
 	}
