@@ -64,7 +64,9 @@ func (q *Queue) Add(t *Topic) error {
 }
 
 // Removes a Topic of the specified name from the Queue, does nothing if the name is not found
-func (q *Queue) Remove(s string) {
+func (q *Queue) Remove(s string) error {
+
+	found := false
 
 	// find the name
 	for i, t := range q.q {
@@ -75,12 +77,24 @@ func (q *Queue) Remove(s string) {
 
 			// update modified
 			q.Modified = time.Now()
+
+			// set found
+			found = true
 		}
 	}
+
+	q.Modified = time.Now()
+
+	if found == false {
+		return errors.New("topic not found")
+	}
+	return nil
 }
 
 // Moves the Topic of the specified name to the front of the Queue
-func (q *Queue) Bump(s string) {
+func (q *Queue) Bump(s string) error {
+
+	found := false
 
 	// find the Topic
 	for i := range q.q {
@@ -92,20 +106,41 @@ func (q *Queue) Bump(s string) {
 			// rebuild the slice and prepend the topic
 			q.q = append(q.q[:i], q.q[i+1:]...)
 			q.q = append([]*Topic{t}, q.q...)
+
+			found = true
 		}
 	}
+
+	q.Modified = time.Now()
+
+	if found == false {
+		return errors.New("topic not found")
+	}
+	return nil
 }
 
 // moves the specified Topic to the end of the Queue
-func (q *Queue) Skip(s string) {
+func (q *Queue) Skip(s string) error {
+
+	found := false
+
 	// find the topic
 	for i := range q.q {
 		if q.q[i].Name == s {
 			tmp := q.q[i]
 			q.q = append(q.q[:i], q.q[i+1:]...)
 			q.q = append(q.q, tmp)
+
+			found = true
 		}
 	}
+
+	q.Modified = time.Now()
+
+	if found == false {
+		return errors.New("topic not found")
+	}
+	return nil
 }
 
 // attach a string to the list of sources
@@ -118,6 +153,8 @@ func (q *Queue) Attach(n, s string) error {
 			found = true
 		}
 	}
+
+	q.Modified = time.Now()
 
 	if found == false {
 		return errors.New("the specified topic does not exist")
@@ -139,6 +176,8 @@ func (q *Queue) Detach(n string, i int) error {
 			found = true
 		}
 	}
+
+	q.Modified = time.Now()
 
 	if found == false {
 		return errors.New("the specified topic does not exist")

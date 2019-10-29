@@ -92,16 +92,16 @@ func TestQueue_Bump(t *testing.T) {
 	q := NewQueue()
 
 	// zero tops; not found
-	q.Bump("some-name")
-	if q.Len() != 0 {
-		t.Errorf("not nil after Bump")
+	err := q.Bump("some-name")
+	if err == nil {
+		t.Errorf("no error thrown")
 	}
 
 	// one top
 	_ = q.Add(&Topic{Name: "t1"})
-	q.Bump("t1")
+	err = q.Bump("t1")
 	if q.q[0].Name != "t1" {
-		t.Errorf("bump moved the topic back")
+		t.Errorf("bump moved the only topic back")
 	}
 
 	_ = q.Add(&Topic{Name: "t2"})
@@ -212,6 +212,7 @@ func TestQueue_Next(t *testing.T) {
 
 /*
 Cases:
+- Not found
 - Remove the last item
 - Remove the first item
 - Remove a middle item
@@ -229,24 +230,32 @@ func TestQueue_Remove(t *testing.T) {
 		name    string
 		in      string
 		wantLen int
+		wantErr bool
 	}{
-		{name: "remove-last", in: "test5", wantLen: 4},
-		{name: "remove-first", in: "test1", wantLen: 3},
-		{name: "remove-middle", in: "test3", wantLen: 2},
-		{name: "remove1", in: "test2", wantLen: 1},
-		{name: "remove2", in: "test4", wantLen: 0},
+		{name: "not-found", in: "not-there", wantLen: 5, wantErr: true},
+		{name: "remove-last", in: "test5", wantLen: 4, wantErr: false},
+		{name: "remove-first", in: "test1", wantLen: 3, wantErr: false},
+		{name: "remove-middle", in: "test3", wantLen: 2, wantErr: false},
+		{name: "remove1", in: "test2", wantLen: 1, wantErr: false},
+		{name: "remove2", in: "test4", wantLen: 0, wantErr: false},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			q.Remove(test.in)
-			if q.Len() != test.wantLen {
-				t.Errorf("len != wantLen (len = %d, wantLen = %d)", q.Len(), test.wantLen)
+			err := q.Remove(test.in)
+			if (err != nil) != test.wantErr {
+				t.Errorf("err != wantErr (err = %v, wantErr = %v)", err, test.wantErr)
 			}
 
-			for _, topic := range q.q {
-				if topic.Name == test.in {
-					t.Errorf("a name was not removed (%s)", test.in)
+			if !test.wantErr {
+				if q.Len() != test.wantLen {
+					t.Errorf("len != wantLen (len = %d, wantLen = %d)", q.Len(), test.wantLen)
+				}
+
+				for _, topic := range q.q {
+					if topic.Name == test.in {
+						t.Errorf("a name was not removed (%s)", test.in)
+					}
 				}
 			}
 		})
@@ -262,14 +271,14 @@ func TestQueue_Skip(t *testing.T) {
 	q := NewQueue()
 
 	// nil q
-	q.Skip("non-extant")
-	if q.Len() != 0 {
+	err := q.Skip("non-extant")
+	if err == nil {
 		t.Errorf("skip added a Topic")
 	}
 
 	// one item
 	_ = q.Add(&Topic{Name: "t1"})
-	q.Skip("t1")
+	err = q.Skip("t1")
 	if q.Len() != 1 {
 		t.Errorf("skip added a topic")
 	}
@@ -296,7 +305,7 @@ func TestQueue_Skip(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			q.Skip(test.in)
+			_ = q.Skip(test.in)
 			for i := range test.wantOrder {
 				if q.q[i].Name != test.wantOrder[i] {
 					t.Errorf("names don't match at index %d (want = %s, got = %s)", i, test.wantOrder[i], q.q[i].Name)
