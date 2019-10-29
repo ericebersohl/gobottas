@@ -1,6 +1,7 @@
 package command
 
 import (
+	"github.com/ericebersohl/gobottas/discussion"
 	"math/rand"
 	"strings"
 	"time"
@@ -60,6 +61,24 @@ func MemeInterceptor(m *Message) error {
 		m.MemeData = &MemeData{
 			Meme: memeSlice[rand.Intn(len(memeSlice))],
 		}
+	}
+
+	return nil
+}
+
+// Adds a QueueData struct to the message
+func QueueInterceptor(m *Message) error {
+	if m.CommandType == Queue {
+		data := discussion.QueueData{
+			Command: discussion.ArgToQueueCommand(m.Args[0]),
+		}
+
+		// remove arg if a valid queue command
+		if data.Command != discussion.QError {
+			m.Args = m.Args[1:]
+		}
+
+		m.QueueData = &data
 	}
 
 	return nil

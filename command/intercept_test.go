@@ -1,6 +1,10 @@
 package command
 
-import "testing"
+import (
+	"github.com/ericebersohl/gobottas/discussion"
+	"github.com/google/go-cmp/cmp"
+	"testing"
+)
 
 func TestHelpInterceptor(t *testing.T) {
 
@@ -75,6 +79,59 @@ func TestMemeInterceptor(t *testing.T) {
 
 			if test.in.CommandType != test.out {
 				t.Errorf("in and out CommandTypes don't match (want = %s, got = %s)", test.out.String(), test.in.CommandType.String())
+			}
+		})
+	}
+}
+
+func TestQueueInterceptor(t *testing.T) {
+	none := Message{CommandType: Unrecognized, Args: []string{"add", "topicName", "description"}}
+	err := Message{CommandType: Queue, Args: []string{"not", "relevant", "to", "queue"}}
+	add := Message{CommandType: Queue, Args: []string{"add", "topicName", "description"}}
+	remove := Message{CommandType: Queue, Args: []string{"remove", "topicName"}}
+	next := Message{CommandType: Queue, Args: []string{"next"}}
+	bump := Message{CommandType: Queue, Args: []string{"bump", "topicName"}}
+	skip := Message{CommandType: Queue, Args: []string{"skip", "topicName"}}
+	attach := Message{CommandType: Queue, Args: []string{"attach", "topicName", "source"}}
+	detach := Message{CommandType: Queue, Args: []string{"detach", "topicName", "source"}}
+
+	tests := []struct {
+		name     string
+		in       *Message
+		out      discussion.QueueCommand
+		wantArgs []string
+		wantNil  bool
+	}{
+		{name: "error", in: &err, out: discussion.QError, wantArgs: []string{"not", "relevant", "to", "queue"}, wantNil: false},
+		{name: "add", in: &add, out: discussion.QAdd, wantArgs: []string{"topicName", "description"}, wantNil: false},
+		{name: "remove", in: &remove, out: discussion.QRemove, wantArgs: []string{"topicName"}, wantNil: false},
+		{name: "next", in: &next, out: discussion.QNext, wantArgs: []string{}, wantNil: false},
+		{name: "bump", in: &bump, out: discussion.QBump, wantArgs: []string{"topicName"}, wantNil: false},
+		{name: "skip", in: &skip, out: discussion.QSkip, wantArgs: []string{"topicName"}, wantNil: false},
+		{name: "attach", in: &attach, out: discussion.QAttach, wantArgs: []string{"topicName", "source"}, wantNil: false},
+		{name: "detach", in: &detach, out: discussion.QDetach, wantArgs: []string{"topicName", "source"}, wantNil: false},
+		{name: "none", in: &none, out: discussion.QError, wantArgs: []string{"add", "topicName", "description"}, wantNil: true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := QueueInterceptor(test.in)
+			if err != nil {
+				t.Errorf("queue interceptor got an error: %v", err)
+			}
+
+			if (test.in.QueueData == nil) != test.wantNil {
+				t.Errorf("queue data is nil when it shouldn't be")
+			}
+
+			if !test.wantNil {
+				if test.in.QueueData.Command != test.out {
+					t.Errorf("commands don't match (want = %s, got = %s)", test.out.String(), test.in.QueueData.Command.String())
+				}
+
+				if !cmp.Equal(test.wantArgs, test.in.Args) {
+					t.Errorf("args != wantArgs (args = %v, wantArgs = %v)", test.in.Args, test.wantArgs)
+				}
 			}
 		})
 	}
