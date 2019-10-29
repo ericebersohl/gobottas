@@ -26,6 +26,11 @@ func (q *Queue) Len() int {
 	return len(q.q)
 }
 
+// Return all topics in the Queue
+func (q *Queue) List() []*Topic {
+	return q.q
+}
+
 // Return the first topic in the queue.  Does not remove the topic from the queue
 func (q *Queue) Next() (*Topic, error) {
 	if len(q.q) > 0 {

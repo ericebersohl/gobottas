@@ -24,10 +24,11 @@ const (
 	QSkip
 	QAttach
 	QDetach
+	QList
 )
 
 func (qc QueueCommand) String() string {
-	return [...]string{"Error", "Add", "Remove", "Next", "Bump", "Skip", "Attach", "Detach"}[qc]
+	return [...]string{"Error", "Add", "Remove", "Next", "Bump", "Skip", "Attach", "Detach", "List"}[qc]
 }
 
 // parse a string arg into a QueueCommand
@@ -47,6 +48,8 @@ func ArgToQueueCommand(arg string) QueueCommand {
 		return QAttach
 	case "detach":
 		return QDetach
+	case "list":
+		return QList
 	default:
 		return QError
 	}
