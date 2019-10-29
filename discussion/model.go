@@ -1,6 +1,10 @@
 package discussion
 
-import "time"
+import (
+	"fmt"
+	"strings"
+	"time"
+)
 
 // Defines data for a Queue command
 type QueueData struct {
@@ -54,4 +58,10 @@ type Topic struct {
 	Description string   // longer description of the topic
 	Sources     []string // an optional list of links to source articles
 	Modified    time.Time
+}
+
+// format the topic for printing
+func (t *Topic) String() string {
+	return fmt.Sprintf("Topic: %s\nDescription: %s\nSources:\n%s\nModified: %s\n",
+		t.Name, t.Description, strings.Join(t.Sources, "\n"), t.Modified.String())
 }
