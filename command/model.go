@@ -14,8 +14,8 @@ type Message struct {
 	Args        []string    // Any whitespace-delimited arguments given after the command
 
 	// Specific Command Data (provided by interceptors)
-	HelpData *HelpData
-	MemeData *MemeData
+	HelpData  *HelpData
+	MemeData  *MemeData
 	QueueData *discussion.QueueData
 }
 
