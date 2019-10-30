@@ -8,6 +8,7 @@ import (
 // todo(ee): better testing, lacking a good way to get a test session to use
 func TestHelpExecutor(t *testing.T) {
 	s := discordgo.Session{}
+	r := NewRegistry()
 
 	nilHD := Message{}
 
@@ -21,7 +22,7 @@ func TestHelpExecutor(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			err := HelpExecutor(&s, test.in)
+			err := HelpExecutor(&s, r, test.in)
 			if (err != nil) != test.wantErr {
 				t.Errorf("err != wantErr (err = %v, wantErr = %v)", err, test.wantErr)
 			}
@@ -32,6 +33,7 @@ func TestHelpExecutor(t *testing.T) {
 // todo(ee): better testing; need better session solution (see above)
 func TestMemeExecutor(t *testing.T) {
 	s := discordgo.Session{}
+	r := NewRegistry()
 	nilMD := Message{}
 
 	tests := []struct {
@@ -44,7 +46,7 @@ func TestMemeExecutor(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			err := MemeExecutor(&s, test.in)
+			err := MemeExecutor(&s, r, test.in)
 			if (err != nil) != test.wantErr {
 				t.Errorf("err != wantErr (err = %v, wantErr = %v)", err, test.wantErr)
 			}
