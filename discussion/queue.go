@@ -112,6 +112,8 @@ func (q *Queue) Bump(s string) error {
 			q.q = append(q.q[:i], q.q[i+1:]...)
 			q.q = append([]*Topic{t}, q.q...)
 
+			q.q[0].Modified = time.Now()
+
 			found = true
 		}
 	}
@@ -133,6 +135,7 @@ func (q *Queue) Skip(s string) error {
 	for i := range q.q {
 		if q.q[i].Name == s {
 			tmp := q.q[i]
+			tmp.Modified = time.Now()
 			q.q = append(q.q[:i], q.q[i+1:]...)
 			q.q = append(q.q, tmp)
 
@@ -155,6 +158,7 @@ func (q *Queue) Attach(n, s string) error {
 	for _, t := range q.q {
 		if t.Name == n {
 			t.Sources = append(t.Sources, s)
+			t.Modified = time.Now()
 			found = true
 		}
 	}
@@ -178,6 +182,7 @@ func (q *Queue) Detach(n string, i int) error {
 			}
 			fmt.Println(t.Sources)
 			t.Sources = append(t.Sources[:i], t.Sources[i+1:]...)
+			t.Modified = time.Now()
 			found = true
 		}
 	}

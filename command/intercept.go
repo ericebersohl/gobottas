@@ -52,6 +52,8 @@ func MemeInterceptor(m *Message) error {
 		memeSlice := []string{
 			"Valtteri, it's James.",
 			"When did I do dangerous driving?",
+			"Steering wheel! Give me the steering wheel. Hey! Hey! Steering wheel, somebody tell him to give it to me! Come on! Move!",
+			"Stay out. IN! IN! IN! IN! IN! IN! IN! IN! IN! IN! IN!",
 		}
 
 		// get a seed; we don't care about crypto security

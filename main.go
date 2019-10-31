@@ -78,6 +78,9 @@ func main() {
 	// spin up a goroutine to handle any commands that come through the channel
 	go handleCommands(cmdChannel, registry, discord)
 
+	// log that gobottas is running
+	log.Printf("Gobottas initialized.")
+
 	// keep main open indefinitely
 	<-make(chan interface{})
 }

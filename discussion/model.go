@@ -61,6 +61,7 @@ type Topic struct {
 	Description string   // longer description of the topic
 	Sources     []string // an optional list of links to source articles
 	Modified    time.Time
+	Created     time.Time
 }
 
 // format the topic for printing
