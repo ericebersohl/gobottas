@@ -71,6 +71,12 @@ func MemeInterceptor(m *Message) error {
 // Adds a QueueData struct to the message
 func QueueInterceptor(m *Message) error {
 	if m.CommandType == Queue {
+
+		// if Args is nil, add a nil string to the list to avoid nil pointer dereference
+		if len(m.Args) == 0 {
+			m.Args = append(m.Args, "")
+		}
+
 		data := discussion.QueueData{
 			Command: discussion.ArgToQueueCommand(m.Args[0]),
 		}

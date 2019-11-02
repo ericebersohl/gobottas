@@ -226,7 +226,7 @@ func QueueExecutor(s Session, r *Registry, msg *Message) error {
 
 	case discussion.QError:
 		msg.CommandType = Error
-		retMsg = "the message arrived at executor already set to error"
+		retMsg = "improper use of command &dq"
 		break
 	}
 
