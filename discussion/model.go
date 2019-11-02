@@ -66,6 +66,25 @@ type Topic struct {
 
 // format the topic for printing
 func (t *Topic) String() string {
-	return fmt.Sprintf("Topic: %s\nDescription: %s\nSources:\n%s\nModified: %s\n",
-		t.Name, t.Description, strings.Join(t.Sources, "\n"), t.Modified.String())
+
+	// Always print Topic name
+	s := []string{
+		fmt.Sprintf("Topic : %s", t.Name),
+	}
+
+	// Add description if it exists
+	if t.Description != "" {
+		s = append(s, fmt.Sprintf("Description : %s", t.Description))
+	}
+
+	// Add sources if there are any
+	if len(t.Sources) > 0 {
+		s = append(s, fmt.Sprintf("Sources :"))
+		s = append(s, t.Sources...)
+	}
+
+	// Always print Last Modified
+	s = append(s, fmt.Sprintf("Time in queue : %s", time.Now().Sub(t.Modified).Truncate(1*time.Second).String()))
+
+	return strings.Join(s, "\n")
 }
