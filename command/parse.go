@@ -4,7 +4,8 @@ import (
 	"errors"
 	"github.com/bwmarrin/discordgo"
 	"log"
-	"strings"
+	"regexp"
+	"strconv"
 )
 
 // Parse takes a discord message and converts it to the command.Message type
@@ -50,7 +51,10 @@ func Parse(msg *discordgo.Message, reg *Registry) (cmd *Message, err error) {
 	cmd.Source = &src
 
 	// get the command type
-	args := strings.Split(cmd.Source.Content, " ")
+	args, err := Tokenize(cmd.Source.Content)
+	if err != nil {
+		return cmd, err
+	}
 
 	// if the first char of the first argument is not the command prefix, then the command type is none
 	if args[0][0] != reg.CommandPrefix {
@@ -73,4 +77,25 @@ func Parse(msg *discordgo.Message, reg *Registry) (cmd *Message, err error) {
 	cmd.Args = args[1:] // args[0] is the command arg
 
 	return cmd, nil
+}
+
+func Tokenize(s string) (tok []string, err error) {
+
+	// parse the string using the dark art of regular expressions
+	tok = regexp.MustCompile(`[^\s"']+|"([^"]*)"|'([^']*)`).FindAllString(s, -1)
+
+	// remove quotes
+	for i := range tok {
+
+		// only call on strings with quotes
+		if string(tok[i][0]) == "\"" {
+			tok[i], err = strconv.Unquote(tok[i])
+			if err != nil {
+				log.Printf("Tokenize failed to Unquote string: %v", err)
+				return nil, err
+			}
+		}
+	}
+
+	return tok, nil
 }

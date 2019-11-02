@@ -1,6 +1,7 @@
 package command
 
 import (
+	"github.com/ericebersohl/gobottas/discussion"
 	"math/rand"
 	"strings"
 	"time"
@@ -51,6 +52,8 @@ func MemeInterceptor(m *Message) error {
 		memeSlice := []string{
 			"Valtteri, it's James.",
 			"When did I do dangerous driving?",
+			"Steering wheel! Give me the steering wheel. Hey! Hey! Steering wheel, somebody tell him to give it to me! Come on! Move!",
+			"Stay out. IN! IN! IN! IN! IN!",
 		}
 
 		// get a seed; we don't care about crypto security
@@ -60,6 +63,30 @@ func MemeInterceptor(m *Message) error {
 		m.MemeData = &MemeData{
 			Meme: memeSlice[rand.Intn(len(memeSlice))],
 		}
+	}
+
+	return nil
+}
+
+// Adds a QueueData struct to the message
+func QueueInterceptor(m *Message) error {
+	if m.CommandType == Queue {
+
+		// if Args is nil, add a nil string to the list to avoid nil pointer dereference
+		if len(m.Args) == 0 {
+			m.Args = append(m.Args, "")
+		}
+
+		data := discussion.QueueData{
+			Command: discussion.ArgToQueueCommand(m.Args[0]),
+		}
+
+		// remove arg if a valid queue command
+		if data.Command != discussion.QError {
+			m.Args = m.Args[1:]
+		}
+
+		m.QueueData = &data
 	}
 
 	return nil
