@@ -12,10 +12,15 @@ import (
 )
 
 // Function that executes the commands defined by the Message struct
-type Executor func(*discordgo.Session, *Registry, *Message) error
+type Executor func(Session, *Registry, *Message) error
+
+// Interface to discordgo.Session
+type Session interface {
+	ChannelMessageSend(string, string) (*discordgo.Message, error)
+}
 
 // Executes commands of type Help
-func HelpExecutor(s *discordgo.Session, r *Registry, msg *Message) error {
+func HelpExecutor(s Session, r *Registry, msg *Message) error {
 
 	// command has no help struct
 	if msg.HelpData == nil {
@@ -35,7 +40,7 @@ func HelpExecutor(s *discordgo.Session, r *Registry, msg *Message) error {
 }
 
 // Function to execute any Meme commands in Messages
-func MemeExecutor(s *discordgo.Session, r *Registry, msg *Message) error {
+func MemeExecutor(s Session, r *Registry, msg *Message) error {
 
 	// error check
 	if msg.MemeData == nil {
@@ -53,7 +58,7 @@ func MemeExecutor(s *discordgo.Session, r *Registry, msg *Message) error {
 }
 
 // Function to execute any Queue commands
-func QueueExecutor(s *discordgo.Session, r *Registry, msg *Message) error {
+func QueueExecutor(s Session, r *Registry, msg *Message) error {
 
 	// error check
 	if msg.QueueData == nil {
@@ -128,6 +133,7 @@ func QueueExecutor(s *discordgo.Session, r *Registry, msg *Message) error {
 		if len(msg.Args) < 1 {
 			msg.QueueData.Command = discussion.QError
 			retMsg = "Cannot call bump without specifying the topic name\n&dq bump [name]\nwhere the name is required"
+			break
 		}
 
 		// call bump
@@ -219,7 +225,9 @@ func QueueExecutor(s *discordgo.Session, r *Registry, msg *Message) error {
 		}
 
 	case discussion.QError:
+		msg.CommandType = Error
 		retMsg = "the message arrived at executor already set to error"
+		break
 	}
 
 	_, err := s.ChannelMessageSend(msg.Source.ChannelId.String(), retMsg)

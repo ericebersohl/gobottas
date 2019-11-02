@@ -13,19 +13,22 @@ func TestHelpInterceptor(t *testing.T) {
 	help := Message{CommandType: Help}
 	meme := Message{CommandType: Meme}
 	errorMsg := Message{CommandType: Error}
+	args := Message{CommandType: Meme, Args: []string{"meme"}}
 
 	tests := []struct {
-		name      string
-		in        *Message
-		out       CommandType
-		outString string
-		wantNil   bool
+		name       string
+		in         *Message
+		out        CommandType
+		outString  string
+		wantNil    bool
+		wantSubMsg bool
 	}{
 		{name: "no-command", in: &noCommand, out: None, wantNil: true},
 		{name: "unrec", in: &unrecognized, out: Unrecognized, wantNil: false},
 		{name: "help", in: &help, out: Help, wantNil: false},
 		{name: "meme", in: &meme, out: Meme, wantNil: false},
 		{name: "error", in: &errorMsg, out: Error, wantNil: false},
+		{name: "args", in: &args, out: Meme, wantNil: false, wantSubMsg: true},
 	}
 
 	for _, test := range tests {
@@ -40,6 +43,12 @@ func TestHelpInterceptor(t *testing.T) {
 
 			if test.in.CommandType != test.out {
 				t.Errorf("HelpData has wrong command type (want = %s, got = %s)", test.out.String(), test.in.CommandType.String())
+			}
+
+			if test.wantSubMsg {
+				if test.in.HelpData.SubMsg == "" {
+					t.Errorf("HelpData has empty submsg (want not empty)")
+				}
 			}
 		})
 	}
