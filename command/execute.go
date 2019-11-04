@@ -214,8 +214,14 @@ func QueueExecutor(s Session, r *Registry, msg *Message) error {
 
 		// get strings
 		var strs []string
-		for _, t := range tops {
-			strs = append(strs, t.String())
+		for i, t := range tops {
+
+			f := fmt.Sprintf("`%2d` %s", i, t.Name)
+			if t.Description != "" {
+				f = fmt.Sprintf("%s: %s", f, t.Description)
+			}
+
+			strs = append(strs, f)
 		}
 
 		if len(strs) > 0 {
