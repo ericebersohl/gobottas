@@ -180,7 +180,7 @@ func QueueExecutor(s Session, r *Registry, msg *Message) error {
 			break
 		}
 
-		retMsg = fmt.Sprintf("attached url %s to topic %s", msg.Args[1], msg.Args[0])
+		retMsg = fmt.Sprintf("attached url to topic %s", msg.Args[0])
 
 	case discussion.QDetach:
 		// check arg count
