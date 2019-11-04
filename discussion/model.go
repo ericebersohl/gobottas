@@ -84,7 +84,7 @@ func (t *Topic) String() string {
 	}
 
 	// Always print Last Modified
-	s = append(s, fmt.Sprintf("Time in queue : %s", time.Now().Sub(t.Modified).Truncate(1*time.Second).String()))
+	s = append(s, fmt.Sprintf("Time in queue : %s", time.Now().Sub(t.Modified).Truncate(time.Second).String()))
 
 	return strings.Join(s, "\n")
 }
