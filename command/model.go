@@ -68,6 +68,7 @@ func ToSnowflake(s string) (Snowflake, error) {
 // Defines relevant message data that is persisted after parsing
 type Source struct {
 	AuthorId  Snowflake // Unique identifier of the sender
+	Username string
 	ChannelId Snowflake // Unique identifier of the channel in which the message was sent
 	Content   string    // Content of the sent message
 }

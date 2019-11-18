@@ -2,6 +2,7 @@ package discussion
 
 import (
 	"fmt"
+	"github.com/bwmarrin/discordgo"
 	"strings"
 	"time"
 )
@@ -10,6 +11,7 @@ import (
 type QueueData struct {
 	Command QueueCommand
 	Topic   *Topic
+	Err error
 }
 
 // Enum for commands for discussion queues
@@ -62,29 +64,18 @@ type Topic struct {
 	Sources     []string // an optional list of links to source articles
 	Modified    time.Time
 	Created     time.Time
+	CreatedBy	string // original author username of the topic
 }
 
-// format the topic for printing
-func (t *Topic) String() string {
+// format the topic for embedding
+func (t *Topic) Embed() *discordgo.MessageEmbed {
+	msg := discordgo.MessageEmbed{}
 
-	// Always print Topic name
-	s := []string{
-		fmt.Sprintf("Topic : %s", t.Name),
-	}
+	msg.Color = 4289797
+	msg.Title = t.Name
+	msg.Footer = &discordgo.MessageEmbedFooter{Text: fmt.Sprintf("Proposed by %s", t.CreatedBy)}
+	msg.Timestamp = t.Created.Format(time.RFC3339)
+	msg.Description = strings.Join(append([]string{t.Description + "\n"}, t.Sources...), "\n")
 
-	// Add description if it exists
-	if t.Description != "" {
-		s = append(s, fmt.Sprintf("Description : %s", t.Description))
-	}
-
-	// Add sources if there are any
-	if len(t.Sources) > 0 {
-		s = append(s, fmt.Sprintf("Sources :"))
-		s = append(s, t.Sources...)
-	}
-
-	// Always print Last Modified
-	s = append(s, fmt.Sprintf("Updated: %s", time.Now().Sub(t.Modified).Truncate(time.Second).String()))
-
-	return strings.Join(s, "\n")
+	return &msg
 }

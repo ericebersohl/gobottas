@@ -4,19 +4,20 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
+	"github.com/ericebersohl/gobottas/discord"
 	"github.com/ericebersohl/gobottas/discussion"
 	"log"
 	"strconv"
-	"strings"
 	"time"
 )
 
 // Function that executes the commands defined by the Message struct
 type Executor func(Session, *Registry, *Message) error
 
-// Interface to discordgo.Session
+// Interface to discordgo.Session, used for testing
 type Session interface {
 	ChannelMessageSend(string, string) (*discordgo.Message, error)
+	ChannelMessageSendEmbed(string, *discordgo.MessageEmbed) (*discordgo.Message, error)
 }
 
 // Executes commands of type Help
@@ -66,14 +67,20 @@ func QueueExecutor(s Session, r *Registry, msg *Message) error {
 	}
 
 	// message to be returned by gobottas
-	retMsg := ""
+	var retEmbed *discordgo.MessageEmbed
+	var dError *discord.Error
 
 	switch msg.QueueData.Command {
 	case discussion.QAdd:
 		// check number of arguments
 		if len(msg.Args) < 1 {
 			msg.QueueData.Command = discussion.QError
-			retMsg = "Cannot call add with no additional arguments.\n&dq add [name] [description]\nwhere name is required and description is optional"
+			err := discord.NewError("Missing Argument(s)",
+				"Cannot call `&dq add` with no additional arguments." +
+					"```&dq add [name] [description]```" +
+					"Name is required, while a description is optional.")
+			msg.QueueData.Err = err
+			retEmbed = err.Embed()
 			break
 		}
 
@@ -81,6 +88,7 @@ func QueueExecutor(s Session, r *Registry, msg *Message) error {
 		top := discussion.Topic{
 			Name:     msg.Args[0],
 			Created:  time.Now(),
+			CreatedBy: msg.Source.Username,
 			Modified: time.Now(),
 		}
 
@@ -93,17 +101,25 @@ func QueueExecutor(s Session, r *Registry, msg *Message) error {
 		err := r.DQueue.Add(&top)
 		if err != nil {
 			msg.QueueData.Command = discussion.QError
-			retMsg = err.Error()
-			break
-		}
+			msg.QueueData.Err = err
 
-		retMsg = fmt.Sprintf("topic %s was added", msg.Args[0])
+			if err, ok := err.(discord.Error); ok {
+				retEmbed = err.Embed()
+				break
+			}
+			return err
+		}
 
 	case discussion.QRemove:
 		// check number of arguments
 		if len(msg.Args) < 1 {
 			msg.QueueData.Command = discussion.QError
-			retMsg = "Cannot call remove without specifying the topic name\n&dq remove [name]\nwhere name is required"
+			err := discord.NewError("Missing Argument(s)",
+				"Cannot call `&dq remove` without an additional argument" +
+				"```&dq remove [name]```" +
+				"Where name is a required argument.")
+			msg.QueueData.Err = err
+			retEmbed = err.Embed()
 			break
 		}
 
@@ -111,28 +127,42 @@ func QueueExecutor(s Session, r *Registry, msg *Message) error {
 		err := r.DQueue.Remove(msg.Args[0])
 		if err != nil {
 			msg.QueueData.Command = discussion.QError
-			retMsg = err.Error()
+			msg.QueueData.Err = err
+
+			if errors.As(err, dError) {
+				retEmbed = dError.Embed()
+			} else {
+				return err
+			}
 			break
 		}
-
-		retMsg = fmt.Sprintf("topic %s was removed", msg.Args[0])
 
 	case discussion.QNext:
 		// get topic
 		t, err := r.DQueue.Next()
 		if err != nil {
 			msg.QueueData.Command = discussion.QError
-			retMsg = err.Error()
+			msg.QueueData.Err = err
+			if errors.As(err, dError) {
+				retEmbed = dError.Embed()
+			} else {
+				return err
+			}
 			break
 		}
 
-		retMsg = t.String()
+		retEmbed = t.Embed()
 
 	case discussion.QBump:
 		// check for arg
 		if len(msg.Args) < 1 {
 			msg.QueueData.Command = discussion.QError
-			retMsg = "Cannot call bump without specifying the topic name\n&dq bump [name]\nwhere the name is required"
+			err := discord.NewError("Missing Argument(s)",
+				"Cannot call `&dq bump` without specifying which topic to bump." +
+				"```&dq bump [name]```" +
+				"Where the topic name is required.")
+			msg.QueueData.Err = err
+			retEmbed = err.Embed()
 			break
 		}
 
@@ -140,17 +170,26 @@ func QueueExecutor(s Session, r *Registry, msg *Message) error {
 		err := r.DQueue.Bump(msg.Args[0])
 		if err != nil {
 			msg.QueueData.Command = discussion.QError
-			retMsg = err.Error()
+			msg.QueueData.Err = err
+
+			if errors.As(err, dError) {
+				retEmbed = dError.Embed()
+			} else {
+				return err
+			}
 			break
 		}
-
-		retMsg = fmt.Sprintf("topic %s was bumped", msg.Args[0])
 
 	case discussion.QSkip:
 		// check for arg
 		if len(msg.Args) < 1 {
 			msg.QueueData.Command = discussion.QError
-			retMsg = "Cannot call skip without specifying a topic name\n&dq skip [name]\nwhere name is required"
+			err := discord.NewError("Missing Argument(s)",
+				"Cannot call `&dq skip` without specifying a topic to skip." +
+				"```&dq skip [name]```" +
+				"Where the topic name is required.")
+			msg.QueueData.Err = err
+			retEmbed = err.Embed()
 			break
 		}
 
@@ -158,17 +197,27 @@ func QueueExecutor(s Session, r *Registry, msg *Message) error {
 		err := r.DQueue.Skip(msg.Args[0])
 		if err != nil {
 			msg.QueueData.Command = discussion.QError
-			retMsg = err.Error()
+			msg.QueueData.Err = err
+
+			if errors.As(err, dError) {
+				retEmbed = dError.Embed()
+			} else {
+				log.Printf("returning not embedding err: %v", err.(discord.Error).Name)
+				return err
+			}
 			break
 		}
-
-		retMsg = fmt.Sprintf("topic %s has been skipped", msg.Args[0])
 
 	case discussion.QAttach:
 		// check arg count
 		if len(msg.Args) < 2 {
 			msg.QueueData.Command = discussion.QError
-			retMsg = "Cannot call attach without 2 arguments\n&dq attach [name] [url]\nwhere name is the topic name and url is the source to attach"
+			err := discord.NewError("Missing Argument(s)",
+				"Cannot call `&dq attach` without specifying a name and source." +
+				"```&dq attach [name] [source]```" +
+				"Where name is the topic name and source is a url (including https://) and both are required.")
+			msg.QueueData.Err = err
+			retEmbed = err.Embed()
 			break
 		}
 
@@ -176,17 +225,26 @@ func QueueExecutor(s Session, r *Registry, msg *Message) error {
 		err := r.DQueue.Attach(msg.Args[0], msg.Args[1])
 		if err != nil {
 			msg.QueueData.Command = discussion.QError
-			retMsg = err.Error()
+			msg.QueueData.Err = err
+
+			if errors.As(err, dError) {
+				retEmbed = dError.Embed()
+			} else {
+				return err
+			}
 			break
 		}
-
-		retMsg = fmt.Sprintf("attached url to topic %s", msg.Args[0])
 
 	case discussion.QDetach:
 		// check arg count
 		if len(msg.Args) < 2 {
 			msg.QueueData.Command = discussion.QError
-			retMsg = "Cannot call detach without 2 arguments\n&dq attach [name] [src-num]\nwhere name is the topic name and src-num is the number of the source to detach"
+			err := discord.NewError("Missing Argument(s)",
+				"Cannot call `&dq detach` without specifying a topic name and the number of the source to be detached." +
+				"```&dq detach [name] [number]```" +
+				"Where name is the topic name, and number is the arabic numeral (e.g.: '5') indicating the index of the source.")
+			msg.QueueData.Err = err
+			retEmbed = err.Embed()
 			break
 		}
 
@@ -194,7 +252,10 @@ func QueueExecutor(s Session, r *Registry, msg *Message) error {
 		num, err := strconv.Atoi(msg.Args[1])
 		if err != nil {
 			msg.QueueData.Command = discussion.QError
-			retMsg = err.Error()
+			err := discord.NewError("Invalid Argument",
+				fmt.Sprintf("The argument %v could not be converted into an integer.", msg.Args[1]))
+			msg.QueueData.Err = err
+			retEmbed = err.Embed()
 			break
 		}
 
@@ -202,44 +263,42 @@ func QueueExecutor(s Session, r *Registry, msg *Message) error {
 		err = r.DQueue.Detach(msg.Args[0], num)
 		if err != nil {
 			msg.QueueData.Command = discussion.QError
-			retMsg = err.Error()
+			msg.QueueData.Err = err
+
+			if errors.As(err, dError) {
+				retEmbed = dError.Embed()
+			} else {
+				return err
+			}
 			break
 		}
-
-		retMsg = fmt.Sprintf("detached source %d from topic %s", num, msg.Args[0])
 
 	case discussion.QList:
 		// call list
 		tops := r.DQueue.List()
 
-		// get strings
-		var strs []string
-		for i, t := range tops {
-
-			f := fmt.Sprintf("`%2d` %s", i, t.Name)
-			if t.Description != "" {
-				f = fmt.Sprintf("%s: %s", f, t.Description)
-			}
-
-			strs = append(strs, f)
-		}
-
-		if len(strs) > 0 {
-			retMsg = strings.Join(strs, "\n")
-		} else {
-			retMsg = "No topics in queue"
+		retEmbed = &discordgo.MessageEmbed{}
+		for _, t := range tops {
+			retEmbed.Fields = append(retEmbed.Fields, &discordgo.MessageEmbedField{
+				Name:   t.Name,
+				Value:  fmt.Sprintf("%s\n%s", t.Description, time.Now().Sub(t.Created).Truncate(time.Second)),
+			})
 		}
 
 	case discussion.QError:
 		msg.CommandType = Error
-		retMsg = "improper use of command &dq"
+		msg.QueueData.Err = discord.NewError("Executor Found Error",
+			"A message came to executor already tagged as QError")
 		break
 	}
 
-	_, err := s.ChannelMessageSend(msg.Source.ChannelId.String(), retMsg)
-	if err != nil {
-		log.Printf("QueueExecutor: %v", err)
-		return err
+	// send an embed if there is one
+	if retEmbed != nil {
+		_, err := s.ChannelMessageSendEmbed(msg.Source.ChannelId.String(), retEmbed)
+		if err != nil {
+			log.Printf("QueueExecutor: %v", err)
+			return err
+		}
 	}
 
 	return nil

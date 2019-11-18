@@ -1,8 +1,8 @@
 package discussion
 
 import (
-	"errors"
 	"fmt"
+	"github.com/ericebersohl/gobottas/discord"
 	"time"
 )
 
@@ -36,7 +36,7 @@ func (q *Queue) Next() (*Topic, error) {
 	if len(q.q) > 0 {
 		return q.q[0], nil
 	}
-	return nil, errors.New("the queue is empty")
+	return nil, discord.NewError("Empty Queue", "Cannot call next when the queue is empty.")
 }
 
 // Add a Topic to the queue
@@ -44,18 +44,18 @@ func (q *Queue) Add(t *Topic) error {
 
 	// check for nil
 	if t == nil {
-		return errors.New("cannot Add nil topic")
+		return discord.NewError("Nil Topic", "Cannot add a nil topic to the queue.")
 	}
 
 	// check for invalid name
 	if t.Name == "" {
-		return errors.New("cannot Add a topic with no name")
+		return discord.NewError("Empty Topic Name", "Cannot add a topic with no name.")
 	}
 
 	// check for name that already exists
 	for _, topic := range q.q {
 		if topic.Name == t.Name {
-			return errors.New("a topic with that name already exists")
+			return discord.NewError("Duplicate Topic", "A topic with that name already exists.")
 		}
 	}
 
@@ -91,7 +91,7 @@ func (q *Queue) Remove(s string) error {
 	q.Modified = time.Now()
 
 	if found == false {
-		return errors.New("topic not found")
+		return discord.NewError("Topic Not Found", "Could not find a topic with that name.")
 	}
 	return nil
 }
@@ -121,7 +121,7 @@ func (q *Queue) Bump(s string) error {
 	q.Modified = time.Now()
 
 	if found == false {
-		return errors.New("topic not found")
+		return discord.NewError("Topic Not Found", "Could not find a topic with that name.")
 	}
 	return nil
 }
@@ -146,7 +146,7 @@ func (q *Queue) Skip(s string) error {
 	q.Modified = time.Now()
 
 	if found == false {
-		return errors.New("topic not found")
+		return discord.NewError("Topic Not Found", "Could not find a topic with that name.")
 	}
 	return nil
 }
@@ -166,7 +166,7 @@ func (q *Queue) Attach(n, s string) error {
 	q.Modified = time.Now()
 
 	if found == false {
-		return errors.New("the specified topic does not exist")
+		return discord.NewError("Topic Not Found", "Could not find a topic with that name.")
 	}
 	return nil
 }
@@ -178,7 +178,7 @@ func (q *Queue) Detach(n string, i int) error {
 	for _, t := range q.q {
 		if t.Name == n {
 			if len(t.Sources) <= i || i < 0 {
-				return errors.New("index out of range")
+				return discord.NewError("Index Out of Range", "You specified a number that is out of the range of sources.")
 			}
 			fmt.Println(t.Sources)
 			t.Sources = append(t.Sources[:i], t.Sources[i+1:]...)
@@ -190,7 +190,7 @@ func (q *Queue) Detach(n string, i int) error {
 	q.Modified = time.Now()
 
 	if found == false {
-		return errors.New("the specified topic does not exist")
+		return discord.NewError("Topic Not Found", "Could not find a topic with that name.")
 	}
 
 	return nil

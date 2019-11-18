@@ -150,3 +150,7 @@ type MockSession struct{}
 func (m MockSession) ChannelMessageSend(string, string) (*discordgo.Message, error) {
 	return nil, nil
 }
+
+func (m MockSession) ChannelMessageSendEmbed(string, *discordgo.MessageEmbed) (*discordgo.Message, error) {
+	return nil, nil
+}
