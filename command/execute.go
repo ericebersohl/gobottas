@@ -14,7 +14,7 @@ import (
 // Function that executes the commands defined by the Message struct
 type Executor func(Session, *Registry, *Message) error
 
-// Interface to discordgo.Session
+// Interface to discordgo.Session, used for testing
 type Session interface {
 	ChannelMessageSend(string, string) (*discordgo.Message, error)
 	ChannelMessageSendEmbed(string, *discordgo.MessageEmbed) (*discordgo.Message, error)
