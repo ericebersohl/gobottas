@@ -48,6 +48,10 @@ func Parse(msg *discordgo.Message, reg *Registry) (cmd *Message, err error) {
 		return cmd, err
 	}
 
+	// get the authors username
+	src.Username = msg.Author.Username
+
+	// attach the source to the message
 	cmd.Source = &src
 
 	// get the command type
