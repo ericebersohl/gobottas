@@ -14,11 +14,11 @@ const (
 )
 
 // Returns a message handler for discord messages, a function is needed since we want the handler to have access to the channel
-func messageHandler(c chan *command.Message, r *command.Registry) func(s *discordgo.Session, m *discordgo.MessageCreate) {
+func messageHandler(c chan *core.Message, r *core.Registry) func(s *discordgo.Session, m *discordgo.MessageCreate) {
 	return func(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		// Parse the message and send all messages go through the bot
-		msg, err := command.Parse(m.Message, r)
+		msg, err := core.Parse(m.Message, r)
 		if err != nil {
 			log.Printf("ignoring message (id = %s) due to error: %v", m.ID, err)
 		}
@@ -29,7 +29,7 @@ func messageHandler(c chan *command.Message, r *command.Registry) func(s *discor
 }
 
 // function to be run in goroutine that handles parsed Messages coming out of the channel
-func handleCommands(c chan *command.Message, r *command.Registry, s *discordgo.Session) {
+func handleCommands(c chan *core.Message, r *core.Registry, s *discordgo.Session) {
 
 	// wait for messages come through, block until they do
 	for msg := range c {
@@ -54,10 +54,10 @@ func main() {
 
 	// build a registry
 	// todo(ee): figure out how to persist functions
-	registry := command.NewRegistry()
+	registry := core.NewRegistry()
 
 	// make a channel through which commands are sent and executed
-	cmdChannel := make(chan *command.Message, channelBuffer)
+	cmdChannel := make(chan *core.Message, channelBuffer)
 	defer close(cmdChannel)
 
 	// Get Connection to Server

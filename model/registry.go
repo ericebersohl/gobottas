@@ -1,4 +1,4 @@
-package command
+package model
 
 import (
 	"github.com/bwmarrin/discordgo"
@@ -42,27 +42,20 @@ func (r *Registry) Execute(msg *Message, s *discordgo.Session) error {
 	return nil
 }
 
-// Declaration of built-in Interceptors
-var BuiltinInterceptors = map[CommandType]Interceptor{
-	Help:  HelpInterceptor,
-	Meme:  MemeInterceptor,
-	Queue: QueueInterceptor,
+// Interface to discordgo.Session, used for testing
+type Session interface {
+	ChannelMessageSend(string, string) (*discordgo.Message, error)
+	ChannelMessageSendEmbed(string, *discordgo.MessageEmbed) (*discordgo.Message, error)
 }
-
-// Declaration of built-in Executors
-var BuiltinExecutors = map[CommandType]Executor{
-	Help:  HelpExecutor,
-	Meme:  MemeExecutor,
-	Queue: QueueExecutor,
-}
-
+type Interceptor func(*Message) error
+type Executor func(Session, *Registry, *Message) error
 type RegistryOpt func(*Registry)
 
 // Get a new registry, optionally pass RegistryOpts for custom functionality
 func NewRegistry(opts ...RegistryOpt) *Registry {
 	r := Registry{
-		Interceptors:  BuiltinInterceptors,
-		Executors:     BuiltinExecutors,
+		Interceptors:  nil,
+		Executors:     nil,
 		DirPath:       "/tmp",
 		CommandPrefix: '&',
 		DQueue:        discussion.NewQueue(),

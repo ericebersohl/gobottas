@@ -1,28 +1,29 @@
-package command
+package core
 
 import (
 	"github.com/ericebersohl/gobottas/discussion"
+	"github.com/ericebersohl/gobottas/model"
 	"math/rand"
 	"strings"
 	"time"
 )
 
-type Interceptor func(*Message) error
+type Interceptor func(*model.Message) error
 
 // Adds relevant data to the HelpData struct.  The Executor might look for this data if it runs into an error
 // If the first arg has a defined submessage, add it.
 // Todo(ee): load help messages from file on startup?
-func HelpInterceptor(m *Message) error {
-	data := HelpData{}
+func HelpInterceptor(m *model.Message) error {
+	data := model.HelpData{}
 
 	switch m.CommandType {
-	case Unrecognized:
+	case model.Unrecognized:
 		data.HelpMsg = "The command you entered was not understood."
-	case Help:
+	case model.Help:
 		data.HelpMsg = "Todo: make this helpful."
-	case Meme:
+	case model.Meme:
 		data.HelpMsg = "Use &meme to check if gobottas is working."
-	case Error:
+	case model.Error:
 		data.HelpMsg = "Gobottas ran into an unhandled error."
 	default:
 		// return the message with a nil HelpData pointer
@@ -46,9 +47,9 @@ func HelpInterceptor(m *Message) error {
 }
 
 // Adds a meme to the Message to be returned by the executor
-func MemeInterceptor(m *Message) error {
+func MemeInterceptor(m *model.Message) error {
 	// if the type isn't meme, don't add a meme
-	if m.CommandType == Meme {
+	if m.CommandType == model.Meme {
 		memeSlice := []string{
 			"Valtteri, it's James.",
 			"When did I do dangerous driving?",
@@ -60,7 +61,7 @@ func MemeInterceptor(m *Message) error {
 		rand.Seed(time.Now().UnixNano())
 
 		// apply a random meme to the Message
-		m.MemeData = &MemeData{
+		m.MemeData = &model.MemeData{
 			Meme: memeSlice[rand.Intn(len(memeSlice))],
 		}
 	}
@@ -69,8 +70,8 @@ func MemeInterceptor(m *Message) error {
 }
 
 // Adds a QueueData struct to the message
-func QueueInterceptor(m *Message) error {
-	if m.CommandType == Queue {
+func QueueInterceptor(m *model.Message) error {
+	if m.CommandType == model.Queue {
 
 		// if Args is nil, add a nil string to the list to avoid nil pointer dereference
 		if len(m.Args) == 0 {

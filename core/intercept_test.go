@@ -1,4 +1,4 @@
-package command
+package core
 
 import (
 	"github.com/ericebersohl/gobottas/discussion"
