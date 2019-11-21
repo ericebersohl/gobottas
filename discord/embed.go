@@ -17,14 +17,14 @@ type Embed struct {
 // definitions of embed element limits
 // https://discordapp.com/developers/docs/resources/channel#embed-limits
 const (
-	TitleLimit = 256
-	DescLimit = 2048
-	FieldLimit = 25
-	FieldNameLimit = 256
+	TitleLimit      = 256
+	DescLimit       = 2048
+	FieldLimit      = 25
+	FieldNameLimit  = 256
 	FieldValueLimit = 1024
-	FooterLimit = 2048
+	FooterLimit     = 2048
 	AuthorNameLimit = 256
-	TotalCharLimit = 6000
+	TotalCharLimit  = 6000
 )
 
 // Returns a pointer to an empty Embed
@@ -48,7 +48,7 @@ func (e *Embed) EmbedTitle(t string) *Embed {
 		t = t[:TitleLimit]
 	}
 
-	if e.charTotal + len(t) > TotalCharLimit {
+	if e.charTotal+len(t) > TotalCharLimit {
 		log.Printf("Embed already at char limit. Returning unmodified.")
 		return e
 	}
@@ -64,7 +64,7 @@ func (e *Embed) EmbedDescription(d string) *Embed {
 		d = d[:DescLimit]
 	}
 
-	if e.charTotal + len(d) > TotalCharLimit {
+	if e.charTotal+len(d) > TotalCharLimit {
 		return e
 	}
 
@@ -84,7 +84,7 @@ func (e *Embed) AddField(name, value string, inline bool) *Embed {
 	}
 
 	if len(e.Fields) < FieldLimit {
-		if e.charTotal + len(name) + len(value) > TotalCharLimit {
+		if e.charTotal+len(name)+len(value) > TotalCharLimit {
 			log.Printf("Embed already at char limit. Returning unmodified.")
 			return e
 		}
@@ -95,8 +95,8 @@ func (e *Embed) AddField(name, value string, inline bool) *Embed {
 			Inline: inline,
 		})
 
-		e.charTotal+= len(value)
-		e.charTotal+= len(name)
+		e.charTotal += len(value)
+		e.charTotal += len(name)
 	}
 	return e
 }
@@ -119,7 +119,7 @@ func (e *Embed) EmbedFooter(text, icon, proxy string) *Embed {
 		text = text[:FooterLimit]
 	}
 
-	if e.charTotal + len(text) > TotalCharLimit {
+	if e.charTotal+len(text) > TotalCharLimit {
 		log.Printf("Embed already at char limit. Returning unmodified.")
 		return e
 	}

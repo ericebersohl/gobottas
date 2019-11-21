@@ -1,4 +1,4 @@
-package command
+package core
 
 import (
 	"errors"
@@ -6,22 +6,17 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/ericebersohl/gobottas/discord"
 	"github.com/ericebersohl/gobottas/discussion"
+	"github.com/ericebersohl/gobottas/model"
 	"log"
 	"strconv"
 	"time"
 )
 
 // Function that executes the commands defined by the Message struct
-type Executor func(Session, *Registry, *Message) error
-
-// Interface to discordgo.Session, used for testing
-type Session interface {
-	ChannelMessageSend(string, string) (*discordgo.Message, error)
-	ChannelMessageSendEmbed(string, *discordgo.MessageEmbed) (*discordgo.Message, error)
-}
+type Executor func(model.Session, *model.Registry, *model.Message) error
 
 // Executes commands of type Help
-func HelpExecutor(s Session, r *Registry, msg *Message) error {
+func HelpExecutor(s model.Session, r *model.Registry, msg *model.Message) error {
 
 	// command has no help struct
 	if msg.HelpData == nil {
@@ -41,7 +36,7 @@ func HelpExecutor(s Session, r *Registry, msg *Message) error {
 }
 
 // Function to execute any Meme commands in Messages
-func MemeExecutor(s Session, r *Registry, msg *Message) error {
+func MemeExecutor(s model.Session, r *model.Registry, msg *model.Message) error {
 
 	// error check
 	if msg.MemeData == nil {
@@ -59,7 +54,7 @@ func MemeExecutor(s Session, r *Registry, msg *Message) error {
 }
 
 // Function to execute any Queue commands
-func QueueExecutor(s Session, r *Registry, msg *Message) error {
+func QueueExecutor(s model.Session, r *model.Registry, msg *model.Message) error {
 
 	// error check
 	if msg.QueueData == nil {
@@ -76,8 +71,8 @@ func QueueExecutor(s Session, r *Registry, msg *Message) error {
 		if len(msg.Args) < 1 {
 			msg.QueueData.Command = discussion.QError
 			err := discord.NewError("Missing Argument(s)",
-				"Cannot call `&dq add` with no additional arguments." +
-					"```&dq add [name] [description]```" +
+				"Cannot call `&dq add` with no additional arguments."+
+					"```&dq add [name] [description]```"+
 					"Name is required, while a description is optional.")
 			msg.QueueData.Err = err
 			retEmbed = err.Embed()
@@ -86,10 +81,10 @@ func QueueExecutor(s Session, r *Registry, msg *Message) error {
 
 		// make topic
 		top := discussion.Topic{
-			Name:     msg.Args[0],
-			Created:  time.Now(),
+			Name:      msg.Args[0],
+			Created:   time.Now(),
 			CreatedBy: msg.Source.Username,
-			Modified: time.Now(),
+			Modified:  time.Now(),
 		}
 
 		// check for description
@@ -115,9 +110,9 @@ func QueueExecutor(s Session, r *Registry, msg *Message) error {
 		if len(msg.Args) < 1 {
 			msg.QueueData.Command = discussion.QError
 			err := discord.NewError("Missing Argument(s)",
-				"Cannot call `&dq remove` without an additional argument" +
-				"```&dq remove [name]```" +
-				"Where name is a required argument.")
+				"Cannot call `&dq remove` without an additional argument"+
+					"```&dq remove [name]```"+
+					"Where name is a required argument.")
 			msg.QueueData.Err = err
 			retEmbed = err.Embed()
 			break
@@ -158,9 +153,9 @@ func QueueExecutor(s Session, r *Registry, msg *Message) error {
 		if len(msg.Args) < 1 {
 			msg.QueueData.Command = discussion.QError
 			err := discord.NewError("Missing Argument(s)",
-				"Cannot call `&dq bump` without specifying which topic to bump." +
-				"```&dq bump [name]```" +
-				"Where the topic name is required.")
+				"Cannot call `&dq bump` without specifying which topic to bump."+
+					"```&dq bump [name]```"+
+					"Where the topic name is required.")
 			msg.QueueData.Err = err
 			retEmbed = err.Embed()
 			break
@@ -185,9 +180,9 @@ func QueueExecutor(s Session, r *Registry, msg *Message) error {
 		if len(msg.Args) < 1 {
 			msg.QueueData.Command = discussion.QError
 			err := discord.NewError("Missing Argument(s)",
-				"Cannot call `&dq skip` without specifying a topic to skip." +
-				"```&dq skip [name]```" +
-				"Where the topic name is required.")
+				"Cannot call `&dq skip` without specifying a topic to skip."+
+					"```&dq skip [name]```"+
+					"Where the topic name is required.")
 			msg.QueueData.Err = err
 			retEmbed = err.Embed()
 			break
@@ -213,9 +208,9 @@ func QueueExecutor(s Session, r *Registry, msg *Message) error {
 		if len(msg.Args) < 2 {
 			msg.QueueData.Command = discussion.QError
 			err := discord.NewError("Missing Argument(s)",
-				"Cannot call `&dq attach` without specifying a name and source." +
-				"```&dq attach [name] [source]```" +
-				"Where name is the topic name and source is a url (including https://) and both are required.")
+				"Cannot call `&dq attach` without specifying a name and source."+
+					"```&dq attach [name] [source]```"+
+					"Where name is the topic name and source is a url (including https://) and both are required.")
 			msg.QueueData.Err = err
 			retEmbed = err.Embed()
 			break
@@ -240,9 +235,9 @@ func QueueExecutor(s Session, r *Registry, msg *Message) error {
 		if len(msg.Args) < 2 {
 			msg.QueueData.Command = discussion.QError
 			err := discord.NewError("Missing Argument(s)",
-				"Cannot call `&dq detach` without specifying a topic name and the number of the source to be detached." +
-				"```&dq detach [name] [number]```" +
-				"Where name is the topic name, and number is the arabic numeral (e.g.: '5') indicating the index of the source.")
+				"Cannot call `&dq detach` without specifying a topic name and the number of the source to be detached."+
+					"```&dq detach [name] [number]```"+
+					"Where name is the topic name, and number is the arabic numeral (e.g.: '5') indicating the index of the source.")
 			msg.QueueData.Err = err
 			retEmbed = err.Embed()
 			break
@@ -280,13 +275,13 @@ func QueueExecutor(s Session, r *Registry, msg *Message) error {
 		retEmbed = &discordgo.MessageEmbed{}
 		for _, t := range tops {
 			retEmbed.Fields = append(retEmbed.Fields, &discordgo.MessageEmbedField{
-				Name:   t.Name,
-				Value:  fmt.Sprintf("%s\n%s", t.Description, time.Now().Sub(t.Created).Truncate(time.Second)),
+				Name:  t.Name,
+				Value: fmt.Sprintf("%s\n%s", t.Description, time.Now().Sub(t.Created).Truncate(time.Second)),
 			})
 		}
 
 	case discussion.QError:
-		msg.CommandType = Error
+		msg.CommandType = model.Error
 		msg.QueueData.Err = discord.NewError("Executor Found Error",
 			"A message came to executor already tagged as QError")
 		break

@@ -11,7 +11,7 @@ import (
 type QueueData struct {
 	Command QueueCommand
 	Topic   *Topic
-	Err error
+	Err     error
 }
 
 // Enum for commands for discussion queues
@@ -64,7 +64,7 @@ type Topic struct {
 	Sources     []string // an optional list of links to source articles
 	Modified    time.Time
 	Created     time.Time
-	CreatedBy	string // original author username of the topic
+	CreatedBy   string // original author username of the topic
 }
 
 // format the topic for embedding

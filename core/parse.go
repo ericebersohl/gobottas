@@ -1,8 +1,9 @@
-package command
+package core
 
 import (
 	"errors"
 	"github.com/bwmarrin/discordgo"
+	"github.com/ericebersohl/gobottas/model"
 	"log"
 	"regexp"
 	"strconv"
@@ -10,41 +11,41 @@ import (
 
 // Parse takes a discord message and converts it to the command.Message type
 // The function is guaranteed to return a Message with a CommandType
-func Parse(msg *discordgo.Message, reg *Registry) (cmd *Message, err error) {
+func Parse(msg *discordgo.Message, reg *model.Registry) (cmd *model.Message, err error) {
 
 	// Default command has type none
-	cmd = &Message{
-		CommandType: None,
+	cmd = &model.Message{
+		CommandType: model.None,
 	}
 
 	// check for nil Author
 	if msg.Author == nil {
-		cmd.CommandType = Error
+		cmd.CommandType = model.Error
 		return cmd, errors.New("discord message has nil author")
 	}
 
 	// check for empty content
 	if msg.Content == "" {
-		cmd.CommandType = Error
+		cmd.CommandType = model.Error
 		return cmd, errors.New("discord message has empty content string")
 	}
 
-	src := Source{}
+	src := model.Source{}
 	src.Content = msg.Content
 
 	// convert the authorId string to snowflake
-	src.AuthorId, err = ToSnowflake(msg.Author.ID)
+	src.AuthorId, err = model.ToSnowflake(msg.Author.ID)
 	if err != nil {
 		log.Printf("Parse: %v", err)
-		cmd.CommandType = Error
+		cmd.CommandType = model.Error
 		return cmd, err
 	}
 
 	// convert the channelId string to snowflake
-	src.ChannelId, err = ToSnowflake(msg.ChannelID)
+	src.ChannelId, err = model.ToSnowflake(msg.ChannelID)
 	if err != nil {
 		log.Printf("Parse: %v", err)
-		cmd.CommandType = Error
+		cmd.CommandType = model.Error
 		return cmd, err
 	}
 
@@ -72,8 +73,8 @@ func Parse(msg *discordgo.Message, reg *Registry) (cmd *Message, err error) {
 
 	// get the command type from the first argument, if the command string is not recognized it will default to
 	// command type Unrecognized
-	cmd.CommandType = StrToCommandType(args[0][1:])
-	if cmd.CommandType == Unrecognized {
+	cmd.CommandType = model.StrToCommandType(args[0][1:])
+	if cmd.CommandType == model.Unrecognized {
 		// return now so that args don't get updated
 		return cmd, nil
 	}
