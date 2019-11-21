@@ -2,33 +2,34 @@ package core
 
 import (
 	"github.com/ericebersohl/gobottas/discussion"
+	"github.com/ericebersohl/gobottas/model"
 	"github.com/google/go-cmp/cmp"
 	"testing"
 )
 
 func TestHelpInterceptor(t *testing.T) {
 
-	noCommand := Message{CommandType: None}
-	unrecognized := Message{CommandType: Unrecognized}
-	help := Message{CommandType: Help}
-	meme := Message{CommandType: Meme}
-	errorMsg := Message{CommandType: Error}
-	args := Message{CommandType: Meme, Args: []string{"meme"}}
+	noCommand := model.Message{CommandType: model.None}
+	unrecognized := model.Message{CommandType: model.Unrecognized}
+	help := model.Message{CommandType: model.Help}
+	meme := model.Message{CommandType: model.Meme}
+	errorMsg := model.Message{CommandType: model.Error}
+	args := model.Message{CommandType: model.Meme, Args: []string{"meme"}}
 
 	tests := []struct {
 		name       string
-		in         *Message
-		out        CommandType
+		in         *model.Message
+		out        model.CommandType
 		outString  string
 		wantNil    bool
 		wantSubMsg bool
 	}{
-		{name: "no-command", in: &noCommand, out: None, wantNil: true},
-		{name: "unrec", in: &unrecognized, out: Unrecognized, wantNil: false},
-		{name: "help", in: &help, out: Help, wantNil: false},
-		{name: "meme", in: &meme, out: Meme, wantNil: false},
-		{name: "error", in: &errorMsg, out: Error, wantNil: false},
-		{name: "args", in: &args, out: Meme, wantNil: false, wantSubMsg: true},
+		{name: "no-command", in: &noCommand, out: model.None, wantNil: true},
+		{name: "unrec", in: &unrecognized, out: model.Unrecognized, wantNil: false},
+		{name: "help", in: &help, out: model.Help, wantNil: false},
+		{name: "meme", in: &meme, out: model.Meme, wantNil: false},
+		{name: "error", in: &errorMsg, out: model.Error, wantNil: false},
+		{name: "args", in: &args, out: model.Meme, wantNil: false, wantSubMsg: true},
 	}
 
 	for _, test := range tests {
@@ -56,23 +57,23 @@ func TestHelpInterceptor(t *testing.T) {
 
 func TestMemeInterceptor(t *testing.T) {
 
-	none := Message{CommandType: None}
-	unrecognized := Message{CommandType: Unrecognized}
-	help := Message{CommandType: Help}
-	meme := Message{CommandType: Meme}
-	errorMsg := Message{CommandType: Error}
+	none := model.Message{CommandType: model.None}
+	unrecognized := model.Message{CommandType: model.Unrecognized}
+	help := model.Message{CommandType: model.Help}
+	meme := model.Message{CommandType: model.Meme}
+	errorMsg := model.Message{CommandType: model.Error}
 
 	tests := []struct {
 		name    string
-		in      *Message
-		out     CommandType
+		in      *model.Message
+		out     model.CommandType
 		wantNil bool
 	}{
-		{name: "none", in: &none, out: None, wantNil: true},
-		{name: "unrec", in: &unrecognized, out: Unrecognized, wantNil: true},
-		{name: "help", in: &help, out: Help, wantNil: true},
-		{name: "meme", in: &meme, out: Meme, wantNil: false},
-		{name: "error", in: &errorMsg, out: Error, wantNil: true},
+		{name: "none", in: &none, out: model.None, wantNil: true},
+		{name: "unrec", in: &unrecognized, out: model.Unrecognized, wantNil: true},
+		{name: "help", in: &help, out: model.Help, wantNil: true},
+		{name: "meme", in: &meme, out: model.Meme, wantNil: false},
+		{name: "error", in: &errorMsg, out: model.Error, wantNil: true},
 	}
 
 	for _, test := range tests {
@@ -94,19 +95,19 @@ func TestMemeInterceptor(t *testing.T) {
 }
 
 func TestQueueInterceptor(t *testing.T) {
-	none := Message{CommandType: Unrecognized, Args: []string{"add", "topicName", "description"}}
-	err := Message{CommandType: Queue, Args: []string{"not", "relevant", "to", "queue"}}
-	add := Message{CommandType: Queue, Args: []string{"add", "topicName", "description"}}
-	remove := Message{CommandType: Queue, Args: []string{"remove", "topicName"}}
-	next := Message{CommandType: Queue, Args: []string{"next"}}
-	bump := Message{CommandType: Queue, Args: []string{"bump", "topicName"}}
-	skip := Message{CommandType: Queue, Args: []string{"skip", "topicName"}}
-	attach := Message{CommandType: Queue, Args: []string{"attach", "topicName", "source"}}
-	detach := Message{CommandType: Queue, Args: []string{"detach", "topicName", "source"}}
+	none := model.Message{CommandType: model.Unrecognized, Args: []string{"add", "topicName", "description"}}
+	err := model.Message{CommandType: model.Queue, Args: []string{"not", "relevant", "to", "queue"}}
+	add := model.Message{CommandType: model.Queue, Args: []string{"add", "topicName", "description"}}
+	remove := model.Message{CommandType: model.Queue, Args: []string{"remove", "topicName"}}
+	next := model.Message{CommandType: model.Queue, Args: []string{"next"}}
+	bump := model.Message{CommandType: model.Queue, Args: []string{"bump", "topicName"}}
+	skip := model.Message{CommandType: model.Queue, Args: []string{"skip", "topicName"}}
+	attach := model.Message{CommandType: model.Queue, Args: []string{"attach", "topicName", "source"}}
+	detach := model.Message{CommandType: model.Queue, Args: []string{"detach", "topicName", "source"}}
 
 	tests := []struct {
 		name     string
-		in       *Message
+		in       *model.Message
 		out      discussion.QueueCommand
 		wantArgs []string
 		wantNil  bool

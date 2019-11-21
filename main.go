@@ -1,7 +1,8 @@
 package main
 
 import (
-	"github.com/ericebersohl/gobottas/command"
+	"github.com/ericebersohl/gobottas/core"
+	"github.com/ericebersohl/gobottas/model"
 	"log"
 	"os"
 
@@ -14,7 +15,7 @@ const (
 )
 
 // Returns a message handler for discord messages, a function is needed since we want the handler to have access to the channel
-func messageHandler(c chan *core.Message, r *core.Registry) func(s *discordgo.Session, m *discordgo.MessageCreate) {
+func messageHandler(c chan *model.Message, r *model.Registry) func(s *discordgo.Session, m *discordgo.MessageCreate) {
 	return func(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		// Parse the message and send all messages go through the bot
@@ -29,7 +30,7 @@ func messageHandler(c chan *core.Message, r *core.Registry) func(s *discordgo.Se
 }
 
 // function to be run in goroutine that handles parsed Messages coming out of the channel
-func handleCommands(c chan *core.Message, r *core.Registry, s *discordgo.Session) {
+func handleCommands(c chan *model.Message, r *model.Registry, s *discordgo.Session) {
 
 	// wait for messages come through, block until they do
 	for msg := range c {
@@ -54,10 +55,10 @@ func main() {
 
 	// build a registry
 	// todo(ee): figure out how to persist functions
-	registry := core.NewRegistry()
+	registry := model.NewRegistry()
 
 	// make a channel through which commands are sent and executed
-	cmdChannel := make(chan *core.Message, channelBuffer)
+	cmdChannel := make(chan *model.Message, channelBuffer)
 	defer close(cmdChannel)
 
 	// Get Connection to Server

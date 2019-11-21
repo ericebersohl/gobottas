@@ -2,6 +2,7 @@ package core
 
 import (
 	"github.com/bwmarrin/discordgo"
+	"github.com/ericebersohl/gobottas/model"
 	"github.com/google/go-cmp/cmp"
 	"reflect"
 	"testing"
@@ -21,26 +22,26 @@ func getDiscordMessage() discordgo.Message {
 	}
 }
 
-func getCommandMesage() Message {
-	s := Source{
+func getCommandMesage() model.Message {
+	s := model.Source{
 		AuthorId:  3,
 		ChannelId: 2,
 		Content:   "&help do some things",
 	}
 
-	return Message{
-		CommandType: Help,
+	return model.Message{
+		CommandType: model.Help,
 		Source:      &s,
 		Args:        []string{"do", "some", "things"},
 	}
 }
 
 func TestParse(t *testing.T) {
-	r := NewRegistry()
+	r := model.NewRegistry()
 	// normal: normal, bot, not prefixed
 	// nil Message
-	errMessage := Message{
-		CommandType: Error,
+	errMessage := model.Message{
+		CommandType: model.Error,
 	}
 
 	// nil user
@@ -63,7 +64,7 @@ func TestParse(t *testing.T) {
 	noPrefixIn := getDiscordMessage()
 	noPrefixIn.Content = "help do some things"
 	noPrefixOut := getCommandMesage()
-	noPrefixOut.CommandType = None
+	noPrefixOut.CommandType = model.None
 	noPrefixOut.Source.Content = "help do some things"
 	noPrefixOut.Args = nil
 
@@ -71,7 +72,7 @@ func TestParse(t *testing.T) {
 	botIn := getDiscordMessage()
 	botIn.Author.Bot = true
 	botOut := getCommandMesage()
-	botOut.CommandType = None
+	botOut.CommandType = model.None
 	botOut.Args = nil
 
 	// no error, unrecognized command
@@ -79,7 +80,7 @@ func TestParse(t *testing.T) {
 	unRecIn.Content = "&unrecognized do some things"
 	unRecOut := getCommandMesage()
 	unRecOut.Source.Content = "&unrecognized do some things"
-	unRecOut.CommandType = Unrecognized
+	unRecOut.CommandType = model.Unrecognized
 	unRecOut.Args = nil
 
 	// normal
@@ -89,7 +90,7 @@ func TestParse(t *testing.T) {
 	tests := []struct {
 		name    string
 		in      *discordgo.Message
-		want    *Message
+		want    *model.Message
 		wantErr bool
 	}{
 		{name: "nil-user", in: &nilUserIn, want: &errMessage, wantErr: true},
