@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"fmt"
 	"github.com/bwmarrin/discordgo"
 	gb "github.com/ericebersohl/gobottas"
 	"github.com/ericebersohl/gobottas/discussion"
@@ -71,6 +72,7 @@ func (r *Registry) Parse(dMsg *discordgo.Message) (cmd *gb.Message, err error) {
 	// Default to command none
 	cmd = &gb.Message{
 		Command: gb.None,
+		Response: &gb.Response{},
 	}
 
 	// Check for nil author
@@ -127,6 +129,7 @@ func (r *Registry) Parse(dMsg *discordgo.Message) (cmd *gb.Message, err error) {
 
 // Function to call all Interceptors on a message
 func (r *Registry) Intercept(msg *gb.Message) error {
+	fmt.Printf("Intercept: %d\n", len(r.Interceptors))
 	for _, i := range r.Interceptors {
 		err := i(msg)
 		if err != nil {
@@ -140,41 +143,33 @@ func (r *Registry) Intercept(msg *gb.Message) error {
 // Calls the Executor to which the Registry points for the Message CommandType
 func (r *Registry) Execute(msg *gb.Message, s gb.Session) error {
 
-	// if there is no response AND the Command expects one, return an error
-	if msg.Response == nil && msg.Command != gb.None {
-		return errors.New("nil response struct found on execution")
-	}
-
-	// determine whether response is required
-	if msg.Response != nil {
-
-		// prefer embeds, then messages, then not found
-		if msg.Response.Embed != nil {
-			_, err := s.ChannelMessageSendEmbed(msg.Response.ChannelId.String(), msg.Response.Embed)
-			if err != nil {
-				log.Printf("Error on Execute: %v", err)
-				return err
-			}
-
-			// exit successfully
-			return nil
+	// prefer embeds, then messages, then not found
+	if msg.Response.Embed != nil {
+		fmt.Printf("%v\n", msg.Response.Embed)
+		_, err := s.ChannelMessageSendEmbed(msg.Response.ChannelId.String(), msg.Response.Embed)
+		if err != nil {
+			log.Printf("Error on Execute: %v", err)
+			return err
 		}
 
-		// only executes if Embed is nil
-		if msg.Response.Text != "" {
-			_, err := s.ChannelMessageSend(msg.Response.ChannelId.String(), msg.Response.Text)
-			if err != nil {
-				log.Printf("Error on Execute: %v", err)
-				return err
-			}
-
-			// exit sucessfully
-			return nil
-		}
+		// exit successfully
+		return nil
 	}
 
-	// response failure
-	return errors.New("failed to send a response")
+	// only executes if Embed is nil
+	if msg.Response.Text != "" {
+		_, err := s.ChannelMessageSend(msg.Response.ChannelId.String(), msg.Response.Text)
+		if err != nil {
+			log.Printf("Error on Execute: %v", err)
+			return err
+		}
+
+		// exit sucessfully
+		return nil
+	}
+
+	// Following unix norm that no response indicates success
+	return nil
 }
 
 // Split the message content by spaces while leaving segments in quotes intact

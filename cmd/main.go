@@ -1,21 +1,38 @@
 package main
 
 import (
+	"flag"
 	"github.com/bwmarrin/discordgo"
 	gb "github.com/ericebersohl/gobottas"
 	"github.com/ericebersohl/gobottas/core"
+	"github.com/ericebersohl/gobottas/discussion"
 	"github.com/joho/godotenv"
 	"log"
 	"os"
 )
 
 const (
-	channelBuffer = 15
+	DefaultChannelBuffer = 15
 )
+
+var (
+	channelBuffer int
+	discussionQueue bool
+)
+
+func init() {
+	flag.IntVar(&channelBuffer, "buf", DefaultChannelBuffer, "Set the default buffer size for the message channel (must be greater than 0, 1 is an unbuffered channel)")
+	flag.BoolVar(&discussionQueue, "q", false, "Whether to include the Discussion Queue feature (default = false)")
+}
 
 // Returns a message handler for discord messages, a function is needed since we want the handler to have access to the channel
 func messageHandler(c chan *gb.Message, r gb.Registry) func(s *discordgo.Session, m *discordgo.MessageCreate) {
 	return func(s *discordgo.Session, m *discordgo.MessageCreate) {
+
+		// Ignore bot messages
+		if m.Author.Bot {
+			return
+		}
 
 		// Parse the message and send all messages go through the bot
 		msg, err := r.Parse(m.Message)
@@ -45,7 +62,20 @@ func handleCommands(c chan *gb.Message, r gb.Registry, s *discordgo.Session) {
 	}
 }
 
+func getRegistryOpts() (opts []core.RegistryOpt) {
+	if discussionQueue {
+		q := discussion.NewQueue()
+		opts = append(opts, core.WithQueue(q))
+		opts = append(opts, core.WithInterceptor(gb.Queue, discussion.Interceptor(q)))
+	}
+
+	return opts
+}
+
 func main() {
+	// parse flags
+	flag.Parse()
+
 	// Load Environment Variables
 	err := godotenv.Load()
 	if err != nil {
@@ -53,8 +83,7 @@ func main() {
 	}
 
 	// build a registry
-	// todo(ee): figure out how to persist functions
-	registry := core.NewRegistry()
+	registry := core.NewRegistry(getRegistryOpts()...)
 
 	// make a channel through which commands are sent and executed
 	cmdChannel := make(chan *gb.Message, channelBuffer)
