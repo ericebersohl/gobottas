@@ -7,7 +7,6 @@ import (
 	gb "github.com/ericebersohl/gobottas"
 	"github.com/ericebersohl/gobottas/discord"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -71,19 +70,18 @@ type Topic struct {
 	CreatedBy   string // original author username of the topic
 }
 
-// format the topic for embedding
+// Built in Embed function for Topics, primarily used for queue.Next()
 func (t *Topic) Embed() *discordgo.MessageEmbed {
-	msg := discordgo.MessageEmbed{}
-
-	msg.Color = 4289797
-	msg.Title = t.Name
-	msg.Footer = &discordgo.MessageEmbedFooter{Text: fmt.Sprintf("Proposed by %s", t.CreatedBy)}
-	msg.Timestamp = t.Created.Format(time.RFC3339)
-	msg.Description = strings.Join(append([]string{t.Description + "\n"}, t.Sources...), "\n")
-
-	return &msg
+	msg := discord.NewEmbed().
+		EmbedColor(4289797).
+		EmbedTitle(t.Name).
+		EmbedFooter(fmt.Sprintf("Proposed by %s", t.CreatedBy), "", "").
+		EmbedTimestamp(t.Created).
+		EmbedDescription(t.Description)
+	return msg.MessageEmbed
 }
 
+// Returns an interceptor.  Have to nest functions so that the Interceptor can access the Queue
 func Interceptor(q *Queue) gb.Interceptor {
 	return func(msg *gb.Message) error {
 
@@ -105,7 +103,6 @@ func Interceptor(q *Queue) gb.Interceptor {
 
 		// attempt to parse command
 		cmd := ArgToQueueCommand(msg.Args[0])
-		fmt.Printf("CMD: %s ARGS: %d\n", cmd.String(), len(msg.Args))
 		switch cmd {
 		case QAdd:
 			// check for required arg
@@ -115,10 +112,10 @@ func Interceptor(q *Queue) gb.Interceptor {
 			}
 
 			t := Topic{
-				Sources:     nil,
-				Modified:    time.Now(),
-				Created:     time.Now(),
-				CreatedBy:   msg.Source.Username,
+				Sources:   nil,
+				Modified:  time.Now(),
+				Created:   time.Now(),
+				CreatedBy: msg.Source.Username,
 			}
 
 			t.Name = msg.Args[1]
@@ -214,6 +211,7 @@ func Interceptor(q *Queue) gb.Interceptor {
 			// check args
 			if len(msg.Args) < 3 {
 				msg.Response.Embed = discord.NewError("Too Few Args", "Attach requires two additional arguments:\n`&dq attach [name] [url]`").Embed()
+				return nil
 			}
 
 			// call attach
@@ -231,7 +229,7 @@ func Interceptor(q *Queue) gb.Interceptor {
 		case QDetach:
 			// check args
 			if len(msg.Args) < 3 {
-				msg.Response.Embed = discord.NewError("Too Few Args", "Detach requires two arguments:\n`&dq detach [name] [number]`" +
+				msg.Response.Embed = discord.NewError("Too Few Args", "Detach requires two arguments:\n`&dq detach [name] [number]`"+
 					"\nWhere name is the topic name, and number is the index of the source url to remove.").Embed()
 				return nil
 			}

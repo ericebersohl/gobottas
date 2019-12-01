@@ -71,7 +71,7 @@ func (r *Registry) Parse(dMsg *discordgo.Message) (cmd *gb.Message, err error) {
 
 	// Default to command none
 	cmd = &gb.Message{
-		Command: gb.None,
+		Command:  gb.None,
 		Response: &gb.Response{},
 	}
 

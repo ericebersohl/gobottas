@@ -16,7 +16,7 @@ const (
 )
 
 var (
-	channelBuffer int
+	channelBuffer   int
 	discussionQueue bool
 )
 
