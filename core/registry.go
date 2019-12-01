@@ -68,11 +68,16 @@ func WithPath(s string) RegistryOpt {
 
 // Function to parse incoming messages
 func (r *Registry) Parse(dMsg *discordgo.Message) (cmd *gb.Message, err error) {
-
 	// Default to command none
 	cmd = &gb.Message{
 		Command:  gb.None,
 		Response: &gb.Response{},
+	}
+
+	// check for nil in msg
+	if dMsg == nil {
+		cmd.Command = gb.Error
+		return cmd, errors.New("discord message is nil")
 	}
 
 	// Check for nil author
