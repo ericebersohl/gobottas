@@ -10,13 +10,6 @@ import (
 	"time"
 )
 
-// Defines data for a Queue command
-type QueueData struct {
-	Command QueueCommand
-	Topic   *Topic
-	Err     error
-}
-
 // Enum for commands for discussion queues
 type QueueCommand int
 
@@ -62,12 +55,12 @@ func ArgToQueueCommand(arg string) QueueCommand {
 
 // Defines data for a discrete discussion topic
 type Topic struct {
-	Name        string   // the name of the topic
-	Description string   // longer description of the topic
-	Sources     []string // an optional list of links to source articles
-	Modified    time.Time
-	Created     time.Time
-	CreatedBy   string // original author username of the topic
+	Name        string    `json:"name"`        // the name of the topic
+	Description string    `json:"description"` // longer description of the topic
+	Sources     []string  `json:"sources"`     // an optional list of links to source articles
+	Modified    time.Time `json:"modified"`
+	Created     time.Time `json:"created"`
+	CreatedBy   string    `json:"created_by"` // original author username of the topic
 }
 
 // Built in Embed function for Topics, primarily used for queue.Next()

@@ -7,6 +7,7 @@ import (
 	gb "github.com/ericebersohl/gobottas"
 	"github.com/ericebersohl/gobottas/discussion"
 	"log"
+	"os"
 	"regexp"
 	"strconv"
 )
@@ -43,6 +44,15 @@ func NewRegistry(opts ...RegistryOpt) *Registry {
 // Opt Functions
 func WithQueue(q *discussion.Queue) RegistryOpt {
 	return func(r *Registry) {
+		// check if json file exists
+		if _, err := os.Stat(fmt.Sprintf("%s/queue.json", r.DirPath)); !os.IsNotExist(err) {
+			err = q.Load(fmt.Sprintf(r.DirPath))
+			if err != nil {
+				log.Printf("Failed to load from JSON, using new Queue.")
+				q = discussion.NewQueue()
+			}
+		}
+
 		r.DiscussionQueue = q
 	}
 }
@@ -147,6 +157,14 @@ func (r *Registry) Intercept(msg *gb.Message) error {
 
 // Calls the Executor to which the Registry points for the Message CommandType
 func (r *Registry) Execute(msg *gb.Message, s gb.Session) error {
+	// persist changes to the discussion queue if it has changed
+	if msg.Command == gb.Queue {
+		err := r.DiscussionQueue.Save(r.DirPath)
+		if err != nil {
+			log.Printf("Error on DQ save: %v", err)
+			return err
+		}
+	}
 
 	// prefer embeds, then messages, then not found
 	if msg.Response.Embed != nil {
