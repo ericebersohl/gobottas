@@ -6,6 +6,13 @@ import (
 	"strconv"
 )
 
+// colors
+const (
+	ErrorCol = 13632027
+	DiscCol = 4289797
+	MemeCol = 16251392
+)
+
 // Enumeration of the basic types of commands that Gobottas supports
 type Command int
 

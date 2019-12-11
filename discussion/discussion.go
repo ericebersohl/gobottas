@@ -66,7 +66,7 @@ type Topic struct {
 // Built in Embed function for Topics, primarily used for queue.Next()
 func (t *Topic) Embed() *discordgo.MessageEmbed {
 	msg := discord.NewEmbed().
-		EmbedColor(4289797).
+		EmbedColor(gb.DiscCol).
 		EmbedTitle(t.Name).
 		EmbedFooter(fmt.Sprintf("Proposed by %s", t.CreatedBy), "", "").
 		EmbedTimestamp(t.Created).

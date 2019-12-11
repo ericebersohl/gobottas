@@ -7,6 +7,7 @@ import (
 	gb "github.com/ericebersohl/gobottas"
 	"github.com/ericebersohl/gobottas/core"
 	"github.com/ericebersohl/gobottas/discussion"
+	"github.com/ericebersohl/gobottas/meme"
 	"github.com/joho/godotenv"
 	"log"
 	"os"
@@ -21,11 +22,13 @@ var (
 	channelBuffer   int
 	dirPath string
 	discussionQueue bool
+	memeStash bool
 )
 
 func init() {
 	flag.IntVar(&channelBuffer, "buf", DefaultChannelBuffer, "Set the default buffer size for the message channel (must be greater than 0, 1 is an unbuffered channel)")
 	flag.StringVar(&dirPath, "dir", DefaultDirPath, "Set the location on the host machine for gobottas to store files")
+	flag.BoolVar(&memeStash, "m", false, "Whether to include the MemeStash feature (default = false)")
 	flag.BoolVar(&discussionQueue, "q", false, "Whether to include the Discussion Queue feature (default = false)")
 }
 
@@ -79,6 +82,13 @@ func getRegistryOpts() (opts []core.RegistryOpt) {
 		q := discussion.NewQueue()
 		opts = append(opts, core.WithQueue(q))
 		opts = append(opts, core.WithInterceptor(gb.Queue, discussion.Interceptor(q)))
+	}
+
+	// set the memeStash option
+	if memeStash {
+		s := meme.DefaultStash()
+		opts = append(opts, core.WithStash(s))
+		opts = append(opts, core.WithInterceptor(gb.Meme, meme.Interceptor(s)))
 	}
 
 	return opts

@@ -10,4 +10,4 @@ WORKDIR /
 COPY --from=builder /gobottas .
 RUN mkdir -p /store
 VOLUME /store
-CMD ["./main", "-q"]
+CMD ["./main", "-q", "-m"]
