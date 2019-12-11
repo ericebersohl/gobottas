@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/bwmarrin/discordgo"
 	gb "github.com/ericebersohl/gobottas"
 	"github.com/ericebersohl/gobottas/core"
@@ -13,15 +14,18 @@ import (
 
 const (
 	DefaultChannelBuffer = 15
+	DefaultDirPath = "/store"
 )
 
 var (
 	channelBuffer   int
+	dirPath string
 	discussionQueue bool
 )
 
 func init() {
 	flag.IntVar(&channelBuffer, "buf", DefaultChannelBuffer, "Set the default buffer size for the message channel (must be greater than 0, 1 is an unbuffered channel)")
+	flag.StringVar(&dirPath, "dir", DefaultDirPath, "Set the location on the host machine for gobottas to store files")
 	flag.BoolVar(&discussionQueue, "q", false, "Whether to include the Discussion Queue feature (default = false)")
 }
 
@@ -55,6 +59,10 @@ func handleCommands(c chan *gb.Message, r gb.Registry, s *discordgo.Session) {
 			log.Printf("CommandHandler: %v", err)
 		}
 
+		if msg.Response.Embed != nil {
+			fmt.Printf("HANDLER: %v\n", msg.Response.Embed.Fields)
+		}
+
 		err = r.Execute(msg, s)
 		if err != nil {
 			log.Printf("CommandHandler: %v", err)
@@ -63,6 +71,10 @@ func handleCommands(c chan *gb.Message, r gb.Registry, s *discordgo.Session) {
 }
 
 func getRegistryOpts() (opts []core.RegistryOpt) {
+	// set the dir path
+	opts = append(opts, core.WithPath(dirPath))
+
+	// set discussion queue opts if applicable
 	if discussionQueue {
 		q := discussion.NewQueue()
 		opts = append(opts, core.WithQueue(q))
@@ -108,7 +120,7 @@ func main() {
 	go handleCommands(cmdChannel, registry, discord)
 
 	// log that gobottas is running
-	log.Printf("Gobottas initialized.")
+	log.Printf("Gobottas initialized with %d interceptors.", len(registry.Interceptors))
 
 	// keep main open indefinitely
 	<-make(chan interface{})

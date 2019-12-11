@@ -14,7 +14,7 @@ import (
 
 const (
 	DefaultCommandPrefix = '&'
-	DefaultDirPath       = "../build"
+	DefaultDirPath       = "/store"
 )
 
 // Contains Gobottas functions and data
@@ -144,7 +144,6 @@ func (r *Registry) Parse(dMsg *discordgo.Message) (cmd *gb.Message, err error) {
 
 // Function to call all Interceptors on a message
 func (r *Registry) Intercept(msg *gb.Message) error {
-	fmt.Printf("Intercept: %d\n", len(r.Interceptors))
 	for _, i := range r.Interceptors {
 		err := i(msg)
 		if err != nil {
@@ -169,6 +168,10 @@ func (r *Registry) Execute(msg *gb.Message, s gb.Session) error {
 	// prefer embeds, then messages, then not found
 	if msg.Response.Embed != nil {
 		fmt.Printf("%v\n", msg.Response.Embed)
+		for _, f := range msg.Response.Embed.Fields {
+			fmt.Printf("%v\n", f)
+		}
+
 		_, err := s.ChannelMessageSendEmbed(msg.Response.ChannelId.String(), msg.Response.Embed)
 		if err != nil {
 			log.Printf("Error on Execute: %v", err)
