@@ -10,13 +10,6 @@ import (
 	"time"
 )
 
-// Defines data for a Queue command
-type QueueData struct {
-	Command QueueCommand
-	Topic   *Topic
-	Err     error
-}
-
 // Enum for commands for discussion queues
 type QueueCommand int
 
@@ -62,12 +55,12 @@ func ArgToQueueCommand(arg string) QueueCommand {
 
 // Defines data for a discrete discussion topic
 type Topic struct {
-	Name        string   // the name of the topic
-	Description string   // longer description of the topic
-	Sources     []string // an optional list of links to source articles
-	Modified    time.Time
-	Created     time.Time
-	CreatedBy   string // original author username of the topic
+	Name        string    `json:"name"`        // the name of the topic
+	Description string    `json:"description"` // longer description of the topic
+	Sources     []string  `json:"sources"`     // an optional list of links to source articles
+	Modified    time.Time `json:"modified"`
+	Created     time.Time `json:"created"`
+	CreatedBy   string    `json:"created_by"` // original author username of the topic
 }
 
 // Built in Embed function for Topics, primarily used for queue.Next()
@@ -98,8 +91,11 @@ func Interceptor(q *Queue) gb.Interceptor {
 		// Queue commands are sent back on the channel in which they are received
 		msg.Response.ChannelId = msg.Source.ChannelId
 
-		// used by errors.As to determine whether to create an Error embed
-		var dErr *discord.Error
+		// error if Queue msg without at least one arg
+		if len(msg.Args) < 1 {
+			msg.Response.Embed = discord.NewError("Too Few Args", "You must supply a queue command (add, remove, next, bump, skip, attach, detach, or list)").Embed()
+			return nil
+		}
 
 		// attempt to parse command
 		cmd := ArgToQueueCommand(msg.Args[0])
@@ -127,8 +123,9 @@ func Interceptor(q *Queue) gb.Interceptor {
 
 			// add to queue
 			if err := q.Add(&t); err != nil {
-				if errors.As(err, &dErr) {
-					msg.Response.Embed = dErr.Embed()
+				if e, ok := err.(discord.Error); ok {
+					msg.Response.Embed = e.Embed()
+					return nil
 				} else {
 					return err
 				}
@@ -145,8 +142,9 @@ func Interceptor(q *Queue) gb.Interceptor {
 
 			// call remove
 			if err := q.Remove(msg.Args[1]); err != nil {
-				if errors.As(err, &dErr) {
-					msg.Response.Embed = dErr.Embed()
+				if e, ok := err.(discord.Error); ok {
+					msg.Response.Embed = e.Embed()
+					return nil
 				} else {
 					return err
 				}
@@ -158,8 +156,8 @@ func Interceptor(q *Queue) gb.Interceptor {
 			// call next; get topic
 			t, err := q.Next()
 			if err != nil {
-				if errors.As(err, &dErr) {
-					msg.Response.Embed = dErr.Embed()
+				if e, ok := err.(discord.Error); ok {
+					msg.Response.Embed = e.Embed()
 					return nil
 				} else {
 					return err
@@ -178,8 +176,8 @@ func Interceptor(q *Queue) gb.Interceptor {
 
 			// call bump
 			if err := q.Bump(msg.Args[1]); err != nil {
-				if errors.As(err, &dErr) {
-					msg.Response.Embed = dErr.Embed()
+				if e, ok := err.(discord.Error); ok {
+					msg.Response.Embed = e.Embed()
 					return nil
 				} else {
 					return err
@@ -197,8 +195,8 @@ func Interceptor(q *Queue) gb.Interceptor {
 
 			// call skip
 			if err := q.Skip(msg.Args[1]); err != nil {
-				if errors.As(err, &dErr) {
-					msg.Response.Embed = dErr.Embed()
+				if e, ok := err.(discord.Error); ok {
+					msg.Response.Embed = e.Embed()
 					return nil
 				} else {
 					return err
@@ -216,8 +214,8 @@ func Interceptor(q *Queue) gb.Interceptor {
 
 			// call attach
 			if err := q.Attach(msg.Args[1], msg.Args[2]); err != nil {
-				if errors.As(err, &dErr) {
-					msg.Response.Embed = dErr.Embed()
+				if e, ok := err.(discord.Error); ok {
+					msg.Response.Embed = e.Embed()
 					return nil
 				} else {
 					return err
@@ -243,8 +241,8 @@ func Interceptor(q *Queue) gb.Interceptor {
 
 			// call detach
 			if err := q.Detach(msg.Args[1], num); err != nil {
-				if errors.As(err, &dErr) {
-					msg.Response.Embed = dErr.Embed()
+				if e, ok := err.(discord.Error); ok {
+					msg.Response.Embed = e.Embed()
 					return nil
 				} else {
 					return err

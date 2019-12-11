@@ -2,6 +2,7 @@ package discussion
 
 import (
 	"github.com/google/go-cmp/cmp"
+	"os"
 	"testing"
 	"time"
 )
@@ -74,7 +75,7 @@ func TestQueue_Attach(t *testing.T) {
 			}
 
 			if !test.wantErr {
-				if q.q[0].Sources[0] != test.inStr {
+				if q.Q[0].Sources[0] != test.inStr {
 					t.Errorf("sources didn't get updated")
 				}
 			}
@@ -100,7 +101,7 @@ func TestQueue_Bump(t *testing.T) {
 	// one top
 	_ = q.Add(&Topic{Name: "t1"})
 	err = q.Bump("t1")
-	if q.q[0].Name != "t1" {
+	if q.Q[0].Name != "t1" {
 		t.Errorf("bump moved the only topic back")
 	}
 
@@ -122,10 +123,10 @@ func TestQueue_Bump(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			q.Bump(test.in)
+			_ = q.Bump(test.in)
 			for i := range test.wantOrder {
-				if q.q[i].Name != test.wantOrder[i] {
-					t.Errorf("incorrect order (i = %d), (want = %s, got = %s)", i, test.wantOrder[i], q.q[i].Name)
+				if q.Q[i].Name != test.wantOrder[i] {
+					t.Errorf("incorrect order (i = %d), (want = %s, got = %s)", i, test.wantOrder[i], q.Q[i].Name)
 				}
 			}
 		})
@@ -172,7 +173,7 @@ func TestQueue_Detach(t *testing.T) {
 
 			// don't run more tests if we want an error
 			if !test.wantErr {
-				if !cmp.Equal(q.q[0].Sources, test.wantSrc) {
+				if !cmp.Equal(q.Q[0].Sources, test.wantSrc) {
 					t.Errorf("sources slices don't agree")
 				}
 			}
@@ -252,7 +253,7 @@ func TestQueue_Remove(t *testing.T) {
 					t.Errorf("len != wantLen (len = %d, wantLen = %d)", q.Len(), test.wantLen)
 				}
 
-				for _, topic := range q.q {
+				for _, topic := range q.Q {
 					if topic.Name == test.in {
 						t.Errorf("a name was not removed (%s)", test.in)
 					}
@@ -283,7 +284,7 @@ func TestQueue_Skip(t *testing.T) {
 		t.Errorf("skip added a topic")
 	}
 
-	if q.q[0].Name != "t1" {
+	if q.Q[0].Name != "t1" {
 		t.Errorf("skip moved t1 when it shouldn't have")
 	}
 
@@ -307,10 +308,63 @@ func TestQueue_Skip(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			_ = q.Skip(test.in)
 			for i := range test.wantOrder {
-				if q.q[i].Name != test.wantOrder[i] {
-					t.Errorf("names don't match at index %d (want = %s, got = %s)", i, test.wantOrder[i], q.q[i].Name)
+				if q.Q[i].Name != test.wantOrder[i] {
+					t.Errorf("names don't match at index %d (want = %s, got = %s)", i, test.wantOrder[i], q.Q[i].Name)
 				}
 			}
 		})
+	}
+}
+
+/*
+Test Cases:
+- normal
+*/
+func TestQueue_SaveLoad(t *testing.T) {
+	dir := "./test"
+
+	// check if the dir exists, create if it doesn't
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err = os.Mkdir(dir, 0777)
+		if err != nil {
+			t.FailNow()
+		}
+	}
+
+	testQ := NewQueue()
+	err := testQ.Add(&Topic{
+		Name:        "testName",
+		Description: "testDescription",
+		Sources: []string{
+			"https://www.google.com/",
+			"https://www.wikipedia.org/",
+		},
+		Modified:  time.Date(1999, 0, 0, 0, 0, 0, 0, time.UTC),
+		Created:   time.Date(1999, 0, 0, 0, 0, 0, 0, time.UTC),
+		CreatedBy: "Tester",
+	})
+	if err != nil {
+		t.FailNow()
+	}
+
+	err = testQ.Save("./test")
+	if err != nil {
+		t.Errorf("Error on save: %v", err)
+	}
+
+	newQ := NewQueue()
+	err = newQ.Load("./test")
+	if err != nil {
+		t.Errorf("Error on load: %v", err)
+	}
+
+	if !cmp.Equal(testQ, newQ) {
+		t.Errorf("testQ != newQ:\n%s", cmp.Diff(testQ, newQ))
+	}
+
+	// delete dir and all files
+	err = os.RemoveAll(dir)
+	if err != nil {
+		t.FailNow()
 	}
 }

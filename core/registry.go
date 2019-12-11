@@ -7,13 +7,14 @@ import (
 	gb "github.com/ericebersohl/gobottas"
 	"github.com/ericebersohl/gobottas/discussion"
 	"log"
+	"os"
 	"regexp"
 	"strconv"
 )
 
 const (
 	DefaultCommandPrefix = '&'
-	DefaultDirPath       = "../build"
+	DefaultDirPath       = "/store"
 )
 
 // Contains Gobottas functions and data
@@ -43,6 +44,15 @@ func NewRegistry(opts ...RegistryOpt) *Registry {
 // Opt Functions
 func WithQueue(q *discussion.Queue) RegistryOpt {
 	return func(r *Registry) {
+		// check if json file exists
+		if _, err := os.Stat(fmt.Sprintf("%s/queue.json", r.DirPath)); !os.IsNotExist(err) {
+			err = q.Load(fmt.Sprintf(r.DirPath))
+			if err != nil {
+				log.Printf("Failed to load from JSON, using new Queue.")
+				q = discussion.NewQueue()
+			}
+		}
+
 		r.DiscussionQueue = q
 	}
 }
@@ -134,7 +144,6 @@ func (r *Registry) Parse(dMsg *discordgo.Message) (cmd *gb.Message, err error) {
 
 // Function to call all Interceptors on a message
 func (r *Registry) Intercept(msg *gb.Message) error {
-	fmt.Printf("Intercept: %d\n", len(r.Interceptors))
 	for _, i := range r.Interceptors {
 		err := i(msg)
 		if err != nil {
@@ -147,10 +156,22 @@ func (r *Registry) Intercept(msg *gb.Message) error {
 
 // Calls the Executor to which the Registry points for the Message CommandType
 func (r *Registry) Execute(msg *gb.Message, s gb.Session) error {
+	// persist changes to the discussion queue if it has changed
+	if msg.Command == gb.Queue {
+		err := r.DiscussionQueue.Save(r.DirPath)
+		if err != nil {
+			log.Printf("Error on DQ save: %v", err)
+			return err
+		}
+	}
 
 	// prefer embeds, then messages, then not found
 	if msg.Response.Embed != nil {
 		fmt.Printf("%v\n", msg.Response.Embed)
+		for _, f := range msg.Response.Embed.Fields {
+			fmt.Printf("%v\n", f)
+		}
+
 		_, err := s.ChannelMessageSendEmbed(msg.Response.ChannelId.String(), msg.Response.Embed)
 		if err != nil {
 			log.Printf("Error on Execute: %v", err)

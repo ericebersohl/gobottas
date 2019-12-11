@@ -83,6 +83,16 @@ func (e *Embed) AddField(name, value string, inline bool) *Embed {
 		value = value[:FieldValueLimit]
 	}
 
+	// discordgo can't handle nil valued strings
+	if name == "" {
+		log.Printf("nil valued name provided, returning original embed")
+		return e
+	}
+
+	if value == "" {
+		value = "No description provided"
+	}
+
 	if len(e.Fields) < FieldLimit {
 		if e.charTotal+len(name)+len(value) > TotalCharLimit {
 			log.Printf("Embed already at char limit. Returning unmodified.")

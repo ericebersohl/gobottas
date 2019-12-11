@@ -1,21 +1,24 @@
 package discussion
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/ericebersohl/gobottas/discord"
+	"io/ioutil"
+	"log"
 	"time"
 )
 
 // Slice for simplicity, no need to make it a heap-based PQ
 type Queue struct {
-	q        []*Topic // hide the internal list from the user
-	Modified time.Time
+	Q        []*Topic  `json:"q"`        // hide the internal list from the user
+	Modified time.Time `json:"modified"` // time last modified
 }
 
 // Create a new Queue, initializes the underlying slice and updates Modified
 func NewQueue() *Queue {
 	q := Queue{
-		q:        make([]*Topic, 0),
+		Q:        make([]*Topic, 0),
 		Modified: time.Now(),
 	}
 	return &q
@@ -23,18 +26,18 @@ func NewQueue() *Queue {
 
 // Get the number of topics in the queue
 func (q *Queue) Len() int {
-	return len(q.q)
+	return len(q.Q)
 }
 
 // Return all topics in the Queue
 func (q *Queue) List() []*Topic {
-	return q.q
+	return q.Q
 }
 
 // Return the first topic in the queue.  Does not remove the topic from the queue
 func (q *Queue) Next() (*Topic, error) {
-	if len(q.q) > 0 {
-		return q.q[0], nil
+	if len(q.Q) > 0 {
+		return q.Q[0], nil
 	}
 	return nil, discord.NewError("Empty Queue", "Cannot call next when the queue is empty.")
 }
@@ -53,14 +56,14 @@ func (q *Queue) Add(t *Topic) error {
 	}
 
 	// check for name that already exists
-	for _, topic := range q.q {
+	for _, topic := range q.Q {
 		if topic.Name == t.Name {
 			return discord.NewError("Duplicate Topic", "A topic with that name already exists.")
 		}
 	}
 
 	// append to the list
-	q.q = append(q.q, t)
+	q.Q = append(q.Q, t)
 
 	// update modified
 	q.Modified = time.Now()
@@ -74,11 +77,11 @@ func (q *Queue) Remove(s string) error {
 	found := false
 
 	// find the name
-	for i, t := range q.q {
+	for i, t := range q.Q {
 
 		// remove the name
 		if t.Name == s {
-			q.q = append(q.q[:i], q.q[i+1:]...)
+			q.Q = append(q.Q[:i], q.Q[i+1:]...)
 
 			// update modified
 			q.Modified = time.Now()
@@ -102,17 +105,17 @@ func (q *Queue) Bump(s string) error {
 	found := false
 
 	// find the Topic
-	for i := range q.q {
-		if q.q[i].Name == s {
+	for i := range q.Q {
+		if q.Q[i].Name == s {
 
 			// pull out the topic
-			t := q.q[i]
+			t := q.Q[i]
 
 			// rebuild the slice and prepend the topic
-			q.q = append(q.q[:i], q.q[i+1:]...)
-			q.q = append([]*Topic{t}, q.q...)
+			q.Q = append(q.Q[:i], q.Q[i+1:]...)
+			q.Q = append([]*Topic{t}, q.Q...)
 
-			q.q[0].Modified = time.Now()
+			q.Q[0].Modified = time.Now()
 
 			found = true
 		}
@@ -132,12 +135,12 @@ func (q *Queue) Skip(s string) error {
 	found := false
 
 	// find the topic
-	for i := range q.q {
-		if q.q[i].Name == s {
-			tmp := q.q[i]
+	for i := range q.Q {
+		if q.Q[i].Name == s {
+			tmp := q.Q[i]
 			tmp.Modified = time.Now()
-			q.q = append(q.q[:i], q.q[i+1:]...)
-			q.q = append(q.q, tmp)
+			q.Q = append(q.Q[:i], q.Q[i+1:]...)
+			q.Q = append(q.Q, tmp)
 
 			found = true
 		}
@@ -155,7 +158,7 @@ func (q *Queue) Skip(s string) error {
 func (q *Queue) Attach(n, s string) error {
 	found := false
 
-	for _, t := range q.q {
+	for _, t := range q.Q {
 		if t.Name == n {
 			t.Sources = append(t.Sources, s)
 			t.Modified = time.Now()
@@ -175,7 +178,7 @@ func (q *Queue) Attach(n, s string) error {
 func (q *Queue) Detach(n string, i int) error {
 	found := false
 
-	for _, t := range q.q {
+	for _, t := range q.Q {
 		if t.Name == n {
 			if len(t.Sources) <= i || i < 0 {
 				return discord.NewError("Index Out of Range", "You specified a number that is out of the range of sources.")
@@ -191,6 +194,45 @@ func (q *Queue) Detach(n string, i int) error {
 
 	if found == false {
 		return discord.NewError("Topic Not Found", "Could not find a topic with that name.")
+	}
+
+	return nil
+}
+
+// Save the state of the queue to JSON
+func (q *Queue) Save(path string) error {
+	// get []byte
+	data, err := json.Marshal(q)
+	if err != nil {
+		log.Printf("Save error: %v", err)
+		return err
+	}
+
+	// write to file
+	err = ioutil.WriteFile(fmt.Sprintf("%s/queue.json", path), data, 0644)
+	if err != nil {
+		log.Printf("WriteFile: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+// load data into queue from JSON
+func (q *Queue) Load(path string) error {
+
+	// get data
+	data, err := ioutil.ReadFile(fmt.Sprintf("%s/queue.json", path))
+	if err != nil {
+		log.Printf("Load: %v", err)
+		return err
+	}
+
+	// unmarshal data
+	err = json.Unmarshal(data, q)
+	if err != nil {
+		log.Printf("Load Unmarshal error: %v", err)
+		return err
 	}
 
 	return nil

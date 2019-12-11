@@ -14,5 +14,8 @@
 # Environment
 .env
 
+# bin
+bin
+
 # Idea IDE stuff
 .idea
