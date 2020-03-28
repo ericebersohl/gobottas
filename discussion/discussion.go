@@ -11,10 +11,10 @@ import (
 )
 
 // Enum for commands for discussion queues
-type QueueCommand int
+type Command int
 
 const (
-	QError QueueCommand = iota
+	QError Command = iota
 	QAdd
 	QRemove
 	QNext
@@ -25,12 +25,12 @@ const (
 	QList
 )
 
-func (qc QueueCommand) String() string {
+func (qc Command) String() string {
 	return [...]string{"Error", "Add", "Remove", "Next", "Bump", "Skip", "Attach", "Detach", "List"}[qc]
 }
 
 // parse a string arg into a QueueCommand
-func ArgToQueueCommand(arg string) QueueCommand {
+func ArgToCommand(arg string) Command {
 	switch arg {
 	case "add":
 		return QAdd
@@ -66,7 +66,7 @@ type Topic struct {
 // Built in Embed function for Topics, primarily used for queue.Next()
 func (t *Topic) Embed() *discordgo.MessageEmbed {
 	msg := discord.NewEmbed().
-		EmbedColor(4289797).
+		EmbedColor(gb.DiscCol).
 		EmbedTitle(t.Name).
 		EmbedFooter(fmt.Sprintf("Proposed by %s", t.CreatedBy), "", "").
 		EmbedTimestamp(t.Created).
@@ -98,7 +98,7 @@ func Interceptor(q *Queue) gb.Interceptor {
 		}
 
 		// attempt to parse command
-		cmd := ArgToQueueCommand(msg.Args[0])
+		cmd := ArgToCommand(msg.Args[0])
 		switch cmd {
 		case QAdd:
 			// check for required arg

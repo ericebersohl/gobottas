@@ -6,6 +6,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	gb "github.com/ericebersohl/gobottas"
 	"github.com/ericebersohl/gobottas/discussion"
+	"github.com/ericebersohl/gobottas/meme"
 	"log"
 	"os"
 	"regexp"
@@ -23,6 +24,7 @@ type Registry struct {
 	DirPath         string                        // path to local data
 	CommandPrefix   uint8                         // character that precedes all Gobottas commands
 	DiscussionQueue *discussion.Queue             // the data structure that holds discussion queue data
+	MemeStash       meme.Stash                    // The list of memes to be returned at random from the meme command
 }
 
 type RegistryOpt func(*Registry)
@@ -46,7 +48,7 @@ func WithQueue(q *discussion.Queue) RegistryOpt {
 	return func(r *Registry) {
 		// check if json file exists
 		if _, err := os.Stat(fmt.Sprintf("%s/queue.json", r.DirPath)); !os.IsNotExist(err) {
-			err = q.Load(fmt.Sprintf(r.DirPath))
+			err = q.Load(r.DirPath)
 			if err != nil {
 				log.Printf("Failed to load from JSON, using new Queue.")
 				q = discussion.NewQueue()
@@ -73,6 +75,22 @@ func WithInterceptor(c gb.Command, i gb.Interceptor) RegistryOpt {
 func WithPath(s string) RegistryOpt {
 	return func(r *Registry) {
 		r.DirPath = s
+	}
+}
+
+func WithStash(s meme.Stash) RegistryOpt {
+	return func(r *Registry) {
+		// check for saved stash
+		if _, err := os.Stat(fmt.Sprintf("%s/meme.json", r.DirPath)); !os.IsNotExist(err) {
+			err = s.Load(r.DirPath)
+			if err != nil {
+				log.Printf("Failed to load from JSON file; using new Stash")
+				s = meme.DefaultStash(r.DirPath)
+			}
+		}
+
+		// set the stash
+		r.MemeStash = s
 	}
 }
 

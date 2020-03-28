@@ -2,6 +2,7 @@ package discord
 
 import (
 	"github.com/bwmarrin/discordgo"
+	gb "github.com/ericebersohl/gobottas"
 )
 
 // Custom error class for discord errors
@@ -20,7 +21,7 @@ func (d Error) Embed() *discordgo.MessageEmbed {
 	m := NewEmbed().
 		EmbedTitle(d.Name).
 		EmbedDescription(d.Desc).
-		EmbedColor(13632027)
+		EmbedColor(gb.ErrorCol)
 
 	return m.MessageEmbed
 }
