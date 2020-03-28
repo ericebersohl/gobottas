@@ -24,7 +24,7 @@ type Registry struct {
 	DirPath         string                        // path to local data
 	CommandPrefix   uint8                         // character that precedes all Gobottas commands
 	DiscussionQueue *discussion.Queue             // the data structure that holds discussion queue data
-	MemeStash meme.Stash // The list of memes to be returned at random from the meme command
+	MemeStash       meme.Stash                    // The list of memes to be returned at random from the meme command
 }
 
 type RegistryOpt func(*Registry)
@@ -85,7 +85,7 @@ func WithStash(s meme.Stash) RegistryOpt {
 			err = s.Load(r.DirPath)
 			if err != nil {
 				log.Printf("Failed to load from JSON file; using new Stash")
-				s = meme.DefaultStash()
+				s = meme.DefaultStash(r.DirPath)
 			}
 		}
 

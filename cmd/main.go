@@ -15,19 +15,19 @@ import (
 
 const (
 	DefaultChannelBuffer = 15
-	DefaultDirPath = "/store"
+	DefaultDirPath       = "/store"
 )
 
 var (
 	channelBuffer   int
-	dirPath string
+	dirPath         string
 	discussionQueue bool
-	memeStash bool
+	memeStash       bool
 )
 
 func init() {
-	flag.IntVar(&channelBuffer, "buf", DefaultChannelBuffer, "Set the default buffer size for the message channel (must be greater than 0, 1 is an unbuffered channel)")
-	flag.StringVar(&dirPath, "dir", DefaultDirPath, "Set the location on the host machine for gobottas to store files")
+	flag.IntVar(&channelBuffer, "buf", DefaultChannelBuffer, "Set the buffer size for the message channel [Default: 15] (must be greater than 0, 1 is an unbuffered channel)")
+	flag.StringVar(&dirPath, "dir", DefaultDirPath, "Set the location on the local machine for gobottas to store files [Default: /store]")
 	flag.BoolVar(&memeStash, "m", false, "Whether to include the MemeStash feature (default = false)")
 	flag.BoolVar(&discussionQueue, "q", false, "Whether to include the Discussion Queue feature (default = false)")
 }
@@ -86,9 +86,9 @@ func getRegistryOpts() (opts []core.RegistryOpt) {
 
 	// set the memeStash option
 	if memeStash {
-		s := meme.DefaultStash()
+		s := meme.DefaultStash(dirPath)
 		opts = append(opts, core.WithStash(s))
-		opts = append(opts, core.WithInterceptor(gb.Meme, meme.Interceptor(s)))
+		opts = append(opts, core.WithInterceptor(gb.Meme, meme.Interceptor(&s)))
 	}
 
 	return opts
@@ -98,8 +98,14 @@ func main() {
 	// parse flags
 	flag.Parse()
 
+	// create local file directory
+	err := os.MkdirAll(dirPath, 0755)
+	if err != nil {
+		log.Fatalf("Failed to create local directory at %s: %v", dirPath, err)
+	}
+
 	// Load Environment Variables
-	err := godotenv.Load()
+	err = godotenv.Load()
 	if err != nil {
 		log.Fatalf("Failed to load variables from .env.\n%v", err)
 	}
